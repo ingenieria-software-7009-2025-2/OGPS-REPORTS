@@ -1,0 +1,88 @@
+
+
+\section{Casos de Uso}
+
+\subsection{CU1: Registro de Usuario}
+\textbf{Actor Principal:} Usuario nuevo
+
+\subsubsection*{Flujo Principal}
+\begin{enumerate}
+    \item Usuario selecciona ``Registrarse''.
+    \item Sistema muestra formulario de registro.
+    \item Sistema informa al usuario el registro fue exitoso.
+\end{enumerate}
+
+\subsubsection*{Flujos Alternativos}
+\begin{itemize}
+    \item \textbf{Correo electrónico ya registrado:} Sistema muestra un mensaje de error.
+    \item \textbf{Contraseña débil:} Sistema solicita una contraseña que cumpla con los requisitos de seguridad.
+\end{itemize}
+
+\subsection{CU2: Registro de Nuevo Incidente}
+\textbf{Actor Principal:} Usuario registrado
+
+\subsubsection*{Flujo Principal}
+\begin{enumerate}
+    \item Usuario selecciona ``Reportar Incidente''.
+    \item Sistema muestra mapa interactivo.
+    \item Usuario marca ubicación del incidente.
+    \item Usuario completa formulario con detalles.
+    \item Usuario sube fotografías.
+    \item Sistema valida y almacena el incidente.
+    \item Sistema confirma registro exitoso.
+\end{enumerate}
+
+\subsubsection*{Flujos Alternativos}
+\begin{itemize}
+    \item \textbf{Descripción detallada:} Habrá un campo extra en el registro de incidentes en donde si el usuario lo desea podrá agregar una descripción más detallada con texto. 
+    \item \textbf{Fallo en carga de imágenes:} Sistema permite reintento.
+\end{itemize}
+
+\subsection{CU3: Actualización de Estado de Incidente}
+\textbf{Actor Principal:} Usuario registrado
+
+\subsubsection*{Flujo Principal}
+\begin{enumerate}
+    \item Usuario selecciona incidente existente.
+    \item Usuario elige ``Actualizar Estado''.
+    \item Usuario selecciona nuevo estado.
+    \item Usuario sube evidencia fotográfica.
+    \item Sistema valida actualización.
+    \item Sistema notifica al creador original.
+\end{enumerate}
+
+\subsubsection*{Flujos Alternativos}
+\begin{itemize}
+    \item \textbf{Evidencia insuficiente:} Sistema rechaza actualización.
+    \item \textbf{Error en procesamiento:} Sistema mantiene estado anterior.
+\end{itemize}
+
+\subsection{CU4: Visualización de Incidentes en Mapa}
+\textbf{Actor Principal:} Usuario registrado
+
+\subsubsection*{Flujo Principal}
+\begin{enumerate}
+    \item Usuario accede a vista de mapa.
+    \item Sistema carga incidentes cercanos.
+    \item Sistema actualiza markers en mapa.
+    \item Usuario selecciona incidente específico.
+    \item Sistema muestra detalles completos.
+\end{enumerate}
+
+\subsection{CU5: Validación Comunitaria de Resolución}
+\textbf{Actor Principal:} Usuario registrado
+
+\subsubsection*{Flujo Principal}
+        \begin{enumerate}
+            \item Usuario revisa incidente marcado como resuelto.
+            \item Usuario verifica evidencia fotográfica.
+            \item Usuario confirma o disputa resolución.
+            \item Sistema registra validación.
+            \item Sistema actualiza estado según consenso.
+        \end{enumerate}
+        
+\subsubsection*{Flujos Alternativos}
+        \begin{itemize}
+            \item Disputa de resolución: Sistema notifica a administrador.
+            \item Evidencia contradictoria: Sistema mantiene estado en revisión.
+        \end{itemize}

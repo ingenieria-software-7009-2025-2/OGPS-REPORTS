@@ -1,0 +1,100 @@
+% Paquete 'CIMATpreamble'
+% Este paquete establece la configuración de diseño para un documento LaTeX
+\ProvidesPackage{CIMATpreamble}
+
+% Importación de paquetes necesarios
+\usepackage[margin=2cm]{geometry} % Define la geometría de la página
+\usepackage[T1]{fontenc} % Utiliza la codificación de fuente T1
+\usepackage{tikz} % Permite la creación de gráficos vectoriales en LaTeX
+% Bibliotecas para definir un estilo personalizado de las páginas
+\usepackage{fancyhdr}
+
+% Definición de colores personalizados
+\definecolor{grisCIMAT}{RGB}{137,136,139} % Color gris utilizado en el documento
+\definecolor{rojoCIMAT}{RGB}{100,41,62} % Color rojo utilizado en el documento
+
+% Estilo de la primera página
+% Define un estilo personalizado de página para la portada
+\fancypagestyle{firststyle} {
+    \renewcommand{\headrulewidth}{0pt} % Elimina la línea de encabezado
+    \fancyhf{} % Limpia los encabezados y pies de página predeterminados
+    \fancyfoot[C]{ % Pie de página personalizado
+        \begin{tikzpicture}[remember picture,overlay] % Inserta una imagen en el pie de página
+            \node[anchor=south east, yshift=-1.5mm, xshift=1.5mm] at (current page.south east) {
+                \includegraphics[width=215.9mm]{Imagenes/banner_cimat_20200126_05.png}
+            };
+        \end{tikzpicture}
+    }
+}
+
+% Comandos personalizados para definir información en la portada
+\newcommand*{\documentType}[1]{\gdef\@documentType{#1}} % Define el tipo de documento
+\newcommand*{\degree}[1]{\gdef\@degree{#1}} % Define el grado académico
+\newcommand*{\cityandyear}[1]{\gdef\@cityandyear{#1}} % Define la ciudad y el año
+\newcommand*{\institution}[1]{\gdef\@institution{#1}} % Define la institución
+\newcommand*{\career}[1]{\gdef\@career{#1}} % Define la carrera
+\newcommand*{\faculty}[1]{\gdef\@faculty{#1}} % Define la facultad
+\newcommand*{\leftLog}[1]{\gdef\@leftLog{#1}} % Define el logo izquierdo
+\newcommand*{\rightLog}[1]{\gdef\@rightLog{#1}} % Define el logo derecho
+\newcommand*{\subtitle}[1]{\gdef\@subtitle{#1}} % Define el subtítulo
+
+% Redefinición del comando \maketitle para crear la portada del documento
+\renewcommand*{\maketitle}{
+    \begin{titlepage} % Inicia una nueva página de título
+        \newgeometry{left=1.2cm, right=1.2cm, bottom=1.0cm, top=0.9cm} % Ajusta los márgenes para la portada
+        \thispagestyle{firststyle} % Aplica el estilo personalizado 'firststyle'
+        \noindent
+        \begin{minipage}[c]{0.99\textwidth} % Espacio para los logos
+            \begin{flushleft}
+                \includegraphics[height=2.8cm]{\@leftLog} % Inserta el logo izquierdo
+                \hspace{13.541cm} % Ajusta el espacio entre los logos
+                \includegraphics[height=2.8cm]{\@rightLog} % Inserta el logo derecho
+            \end{flushleft}
+        \end{minipage}
+        
+        \begin{center} % Centra el nombre de la institución
+            \begin{minipage}[t]{0.58\textwidth}
+                \begin{center} 
+                    {\large {\color{rojoCIMAT} {\bfseries \@institution}}} % Aplica el estilo y color al nombre de la institución
+                \end{center}
+            \end{minipage}
+        \end{center}
+        
+        \vspace{0.1cm}
+        {\color{rojoCIMAT} \hrule height1.3pt} % Inserta una línea horizontal roja
+        \vspace{2.2cm}
+        
+        \begin{center} 
+            {\bfseries \Large \scshape\@title\par} % Muestra el título del documento
+            \vspace{2.1cm}
+            \makebox[8cm][s]{\large\bfseries \@documentType}\\[0.9cm] % Tipo de documento
+            {\bfseries \large \@degree}\par % Grado académico
+            \vspace{2cm}
+            {\bfseries \Large \scshape\@subtitle\par} % Muestra el subtítulo
+            \vspace{2cm}
+            \makebox[4cm][c]{\bfseries Autor(s): }\par % Título para los autores
+            \vspace{0.5cm}
+            {\large \@author}\par % Nombre(s) de los autores
+            \vspace{4cm}
+            {\small \bfseries \textbf{\@faculty} \\ % Nombre de la facultad
+            \vspace{0.5cm} 
+            \textbf{\@career}} % Nombre de la carrera
+        \end{center} 
+        
+        \vfill
+        
+        \begin{flushright}
+            {\small \@cityandyear} % Ciudad y año de publicación
+        \end{flushright}
+    \end{titlepage}
+}
+
+% Estilo de página para las páginas internas
+\fancypagestyle{plain}{%
+  \fancyhf{} % Limpia todos los encabezados y pies de página
+  \renewcommand{\footrulewidth}{0.5pt} % Establece el grosor de la línea en el pie de página
+  \fancyfoot[C]{\thepage} % Coloca el número de página en el centro del pie de página
+}
+
+% Aplica el estilo de página 'plain' a todo el documento
+\pagestyle{plain}

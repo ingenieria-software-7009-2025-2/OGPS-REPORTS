@@ -1,0 +1,100 @@
+\section{Requerimientos del Sistema}
+
+\subsection{Requerimientos Funcionales}
+
+\subsubsection{RF1: Autenticación de Usuarios}
+\begin{itemize}
+    \item El sistema permitirá el acceso mediante credenciales únicas (correo electrónico y contraseña).
+    \item Se implementarán dos niveles de acceso:
+    \begin{itemize}
+        \item \textbf{Usuarios regulares:} Pueden reportar incidentes, actualizar estados y validar resoluciones.
+        \item \textbf{Administradores:} Tienen acceso a funciones administrativas y gestión de usuarios.
+    \end{itemize}
+    \item Las contraseñas deberán cumplir con requisitos mínimos de seguridad:
+    \begin{itemize}
+        \item Mínimo 8 caracteres.
+        \item Al menos una letra mayúscula.
+        \item Al menos un número.
+        \item Al menos un carácter especial.
+    \end{itemize}
+    \item El sistema bloqueará la cuenta temporalmente después de 3 intentos fallidos de inicio de sesión.
+    \item El sistema mantendrá un registro de todos los intentos de inicio de sesión para fines de auditoría.
+\end{itemize}
+
+\subsubsection{RF2: Gestión de Usuarios}
+\begin{itemize}
+    \item El sistema permitirá el registro, edición y eliminación de usuarios.
+    \item Los usuarios podrán iniciar sesión de forma segura.
+    \item Los usuarios podrán editar su perfil (Alias y Contraseña).
+\end{itemize}
+
+\subsubsection{RF3: Registro de Incidentes}
+\begin{itemize}
+    \item Los usuarios podrán marcar la ubicación exacta del incidente en un mapa.
+    \item Se permitirá subir hasta 5 fotografías por incidente.
+    \item Los usuarios deberán categorizar el tipo de incidente (baches y desperfectos, luminaria, accidentes vehiculares, obstáculos).
+    \item Se requerirá una descripción detallada del problema (limite 500 caracteres).
+    \item El sistema registrará automáticamente la fecha y hora del reporte.
+\end{itemize}
+
+\subsubsection{RF4: Actualización de Incidentes}
+\begin{itemize}
+    \item Cualquier usuario podrá actualizar el estado de un incidente.
+    \item Se requerirá evidencia fotográfica para marcar un incidente como resuelto.
+    \item Se mantendrá un historial de actualizaciones.
+    \item Se notificará al creador del reporte sobre las actualizaciones.
+\end{itemize}
+
+\subsubsection{RF5: Visualización de Incidentes}
+\begin{itemize}
+    \item Mostrar incidentes en un mapa interactivo.
+    \item Filtrar incidentes por categoría, estado y fecha.
+    \item Permitir búsqueda por dirección o coordenadas.
+\end{itemize}
+
+\subsubsection{RF6: Validación Comunitaria de Resolución}
+\begin{itemize}
+    \item Cuando un usuario marca un incidente como resuelto, este no se actualizará automáticamente.
+    \item Otros usuarios podrán confirmar o disputar la resolución.
+    \item Si hay disputas, el incidente permanecerá "en revisión" hasta que un administrador lo valide.
+    \item Se notificará a los usuarios involucrados sobre el resultado de la validación.
+\end{itemize}
+
+
+\subsection{Requerimientos No Funcionales}
+
+\subsubsection{RNF1: Seguridad}
+\begin{itemize}
+    \item Implementación de autenticación.
+    \item Uso de autenticación segura para evitar modificaciones no autorizadas.
+    \item Encriptación de datos sensibles (como contraseñas).
+    \item Validación de inputs para prevenir inyecciones.
+    \item Control de acceso basado en roles.
+    \item Política de grupo:
+    \begin{itemize}
+        \item No todos los grupos tienen acceso a la base de datos.
+        \item Solo usuarios registrados pueden registrar incidentes.
+        \item Solo administradores pueden eliminar cualquier incidente.
+        \item Solo el usuario dueño del incidente puede borrarlo.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{RNF2: Rendimiento}
+\begin{itemize}
+    \item Tiempo de respuesta máximo de 3 segundos.
+    \item Soporte para 100 usuarios simultáneos.
+    \item Optimización de imágenes automática.
+\end{itemize}
+
+\subsubsection{RNF3: Disponibilidad}
+\begin{itemize}
+    \item El sistema deberá estar disponible al menos el 99\% del tiempo.
+    \item Recuperación ante desastres.
+\end{itemize}
+
+\subsubsection{RNF4: Usabilidad}
+\begin{itemize}
+    \item No se puede modificar un incidente sin pruebas.
+    \item Diseño intuitivo y accesible.
+    \item Navegación simple con número reducido de pasos para completar tareas.
+\end{itemize}
