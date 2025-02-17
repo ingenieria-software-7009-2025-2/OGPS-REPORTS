@@ -1,4 +1,4 @@
-package com.OGP404.OGPS.REPORTS_api
+package com.ogp404.ogps.reports_api
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

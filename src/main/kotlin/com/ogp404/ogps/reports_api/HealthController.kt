@@ -1,4 +1,4 @@
-package com.unam.fciencias.OGP-REPORTS-API.modules.config.framework.controller
+package com.ogp404.ogps.reports_api
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
