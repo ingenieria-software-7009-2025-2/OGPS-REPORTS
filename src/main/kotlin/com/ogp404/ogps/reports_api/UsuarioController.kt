@@ -28,8 +28,9 @@ class UsuarioController {
 
     @GetMapping("/me")
     fun retriveUsuario(): ResponseEntity<Usuario>{
-        val meUsuario = Usuario(userName = "BTCloutt1", mail = "geovanimoxito@gmail.com", password = "geovanibbcito20")
+        val meUsuario = Usuario(userName = "BTCloutt1", mail = "geovanimoxito@gmail.com", password = "geovanibbcito20", token = "OGPRP")
         return ResponseEntity.ok(meUsuario)
     }
 
 }
+

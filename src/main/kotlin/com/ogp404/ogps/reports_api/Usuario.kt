@@ -5,4 +5,5 @@ data class Usuario(
     val userName: String = "",
     val mail: String = "",
     val password: String = "",
+    val token: String = ""
     )
