@@ -8,28 +8,28 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/v1/usuario")
-class UsuarioController {
+@RequestMapping("/v1/user")
+class UserController {
 
     @PostMapping("/create")
-    fun createUsuario(@RequestBody create: Usuario): ResponseEntity<Usuario>{
+    fun createUser(@RequestBody create: User): ResponseEntity<User>{
         return ResponseEntity.ok(create)
     }
 
     @PostMapping("/login")
-    fun loginUsuario(@RequestBody login: Usuario): ResponseEntity<Usuario>{
+    fun loginUser(@RequestBody login: User): ResponseEntity<User>{
         return ResponseEntity.ok(login)
     }
 
     @PostMapping("/logout")
-    fun logoutUsuario(): ResponseEntity<String>{
+    fun logoutUser(): ResponseEntity<String>{
         return ResponseEntity.ok("Sesión cerrada")
     }
 
     @GetMapping("/me")
-    fun retriveUsuario(): ResponseEntity<Usuario>{
-        val meUsuario = Usuario(userName = "BTCloutt1", mail = "geovanimoxito@gmail.com", password = "geovanibbcito20", token = "OGPRP")
-        return ResponseEntity.ok(meUsuario)
+    fun retriveUser(): ResponseEntity<User>{
+        val meUser = User(userName = "BTCloutt1", mail = "geovanimoxito@gmail.com", password = "geovanibbcito20", token = "OGPRP")
+        return ResponseEntity.ok(meUser)
     }
 
 }
