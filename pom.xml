@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 		<kotlin.version>1.9.25</kotlin.version>
 	</properties>
 	<dependencies>
@@ -80,10 +80,12 @@
 			<plugin>
 				<groupId>org.jetbrains.kotlin</groupId>
 				<artifactId>kotlin-maven-plugin</artifactId>
+				<version>${kotlin.version}</version>
 				<configuration>
 					<args>
 						<arg>-Xjsr305=strict</arg>
 					</args>
+					<jvmTarget>17</jvmTarget> <!-- Configura el JVM target aquí -->
 					<compilerPlugins>
 						<plugin>spring</plugin>
 						<plugin>jpa</plugin>
