@@ -1,21 +1,21 @@
 package com.ogp404.ogps.reports_api.user.service
 
 import com.ogp404.ogps.reports_api.user.domain.Usuario
+import com.ogp404.ogps.reports_api.user.repository.PersonRepository
 import com.ogp404.ogps.reports_api.user.repository.UserRepository
-import com.ogp404.ogps.reports_api.user.repository.UserEntityRepository
-import com.ogp404.ogps.reports_api.user.repository.AdminEntityRepository
+import com.ogp404.ogps.reports_api.user.repository.AdminRepository
 import com.ogp404.ogps.reports_api.user.repository.entity.Person
-import com.ogp404.ogps.reports_api.user.repository.entity.UserEntity
-import com.ogp404.ogps.reports_api.user.repository.entity.AdminEntity
+import com.ogp404.ogps.reports_api.user.repository.entity.User
+import com.ogp404.ogps.reports_api.user.repository.entity.Admin
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
 class UserService(
-    private var userRepository: UserRepository, 
-    private val userEntityRepository: UserEntityRepository,
-    private val adminEntityRepository: AdminEntityRepository) {
+    private var personRepository: PersonRepository,
+    private val userRepository: UserRepository,
+    private val adminRepository: AdminRepository) {
 
    @Transactional
     fun addUser(usuario: Usuario): Usuario {
@@ -30,17 +30,17 @@ class UserService(
             role = usuario.role.ifEmpty { "User" }
         )
 
-        val savedPerson = userRepository.save(personEntity)
+        val savedPerson = personRepository.save(personEntity)
 
         // Promt CLAUDE
         when (savedPerson.role) {
             "Administrator" -> {
-                val adminEntity = AdminEntity(person = savedPerson)
-                adminEntityRepository.save(adminEntity)
+                val adminEntity = Admin(person = savedPerson)
+                adminRepository.save(adminEntity)
             }
             else -> {
-                val userEntity = UserEntity(person =  savedPerson)
-                userEntityRepository.save(userEntity)
+                val userEntity = User(person =  savedPerson)
+                userRepository.save(userEntity)
             }
         }
 
@@ -57,7 +57,7 @@ class UserService(
     }
 
     fun retrieveAllUser(): List<Usuario> {
-        return userRepository.findAll().map { person ->
+        return personRepository.findAll().map { person ->
             Usuario(
                 id = person.id,
                 userName = person.userName,
@@ -93,21 +93,21 @@ class UserService(
 
     fun updateTokenUser(user: Person, token: String) {
         user.token = token
-        userRepository.save(user)
+        personRepository.save(user)
     }
 
     fun logout(token: String): Boolean {
-        val userFound = userRepository.findByToken(token)
+        val userFound = personRepository.findByToken(token)
 
         return if (userFound != null) {
             userFound.token = null
-            userRepository.save(userFound)
+            personRepository.save(userFound)
             true
         } else false
     }
 
     fun getInfoAboutMe(token: String): Usuario? {
-        val userFound = userRepository.findByToken(token)
+        val userFound = personRepository.findByToken(token)
 
         return userFound?.let {
             Usuario(

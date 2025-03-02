@@ -35,7 +35,7 @@ class Person constructor(
 
 @Entity
 @Table(name = "users")
-class UserEntity(
+class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_user")
@@ -48,7 +48,7 @@ class UserEntity(
 
 @Entity
 @Table(name = "administrator")
-class AdminEntity(
+class Admin(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_admin")
