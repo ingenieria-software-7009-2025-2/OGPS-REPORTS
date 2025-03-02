@@ -1,4 +1,4 @@
-package com.ogp404.ogps.reports_api
+package com.ogp404.ogps.reports_api.healt
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
