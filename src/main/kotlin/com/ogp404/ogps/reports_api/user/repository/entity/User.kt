@@ -31,5 +31,30 @@ class Person constructor(
 
     @Column(name = "role")
     var role: String="",
+)
 
+@Entity
+@Table(name = "users")
+class UserEntity(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_user")
+    val idUser: Int = 0,
+
+    @OneToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "id_person", referencedColumnName = "id_person")
+    var person: Person
+)
+
+@Entity
+@Table(name = "administrator")
+class AdminEntity(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_admin")
+    val idAdmin: Int = 0,
+
+    @OneToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "id_person", referencedColumnName = "id_person")
+    var person: Person
 )

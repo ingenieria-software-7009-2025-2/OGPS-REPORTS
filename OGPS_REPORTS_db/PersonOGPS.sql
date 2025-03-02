@@ -1,5 +1,6 @@
 CREATE TABLE person (
     id_person SERIAL PRIMARY KEY,
+    user_name VARCHAR(255),
     token VARCHAR(255),
     mail VARCHAR(255) NOT NULL UNIQUE CHECK (
         mail ~* '^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\.com$'

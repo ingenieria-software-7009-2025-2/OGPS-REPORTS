@@ -2,16 +2,24 @@ package com.ogp404.ogps.reports_api.user.service
 
 import com.ogp404.ogps.reports_api.user.domain.Usuario
 import com.ogp404.ogps.reports_api.user.repository.UserRepository
+import com.ogp404.ogps.reports_api.user.repository.UserEntityRepository
+import com.ogp404.ogps.reports_api.user.repository.AdminEntityRepository
 import com.ogp404.ogps.reports_api.user.repository.entity.Person
+import com.ogp404.ogps.reports_api.user.repository.entity.UserEntity
+import com.ogp404.ogps.reports_api.user.repository.entity.AdminEntity
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
-class UserService(private var userRepository: UserRepository) {
+class UserService(
+    private var userRepository: UserRepository, 
+    private val userEntityRepository: UserEntityRepository,
+    private val adminEntityRepository: AdminEntityRepository) {
 
+   @Transactional
     fun addUser(usuario: Usuario): Usuario {
-        // Convertimos el objeto del dominio al objeto que necesita nuestra BD
-        val usuarioDB = Person(
+        val personEntity = Person(
             id = usuario.id,
             userName = usuario.userName,
             password = usuario.password,
@@ -19,21 +27,32 @@ class UserService(private var userRepository: UserRepository) {
             token = usuario.token,
             firstName = usuario.firstName,
             lastName = usuario.lastName,
-            role = usuario.role.ifEmpty { "User" }  // Si no se especifica, es "User"
+            role = usuario.role.ifEmpty { "User" }
         )
 
-        val result = userRepository.save(usuarioDB)
+        val savedPerson = userRepository.save(personEntity)
 
-        // Convertimos el objeto de nuestra BD a un objeto de nuestro dominio.
+        // Promt CLAUDE
+        when (savedPerson.role) {
+            "Administrator" -> {
+                val adminEntity = AdminEntity(person = savedPerson)
+                adminEntityRepository.save(adminEntity)
+            }
+            else -> {
+                val userEntity = UserEntity(person =  savedPerson)
+                userEntityRepository.save(userEntity)
+            }
+        }
+
         return Usuario(
-            id = result.id,
-            userName = result.userName,
-            firstName = result.firstName,
-            lastName = result.lastName,
-            mail = result.mail,
-            token = result.token,
-            password = result.password,
-            role = result.role,
+            id = savedPerson.id,
+            userName = savedPerson.userName,
+            firstName = savedPerson.firstName,
+            lastName = savedPerson.lastName,
+            mail = savedPerson.mail,
+            token = savedPerson.token,
+            password = savedPerson.password,
+            role = savedPerson.role
         )
     }
 
