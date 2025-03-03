@@ -107,7 +107,7 @@ class UserService(
          return true
         } else return false
     }
-/*
+
     fun getInfoAboutMe(token: String): Usuario? {
         val userFound = personRepository.findByToken(token)
 
@@ -118,10 +118,36 @@ class UserService(
                 firstName = it.firstName,
                 lastName = it.lastName,
                 mail = it.mail,
-                token = "*******",
+                token = "*****",
                 password = it.password,
                 role = it.role,
             )
         }
-    }*/
+    }
+
+    @Transactional
+    fun updateMe(token: String, usuarioActualizado: Usuario): Usuario?{
+        val userFound = personRepository.findByToken(token)?: return null
+
+            userFound.userName = usuarioActualizado.userName.ifEmpty { userFound.userName }
+            userFound.firstName = usuarioActualizado.firstName.ifEmpty { userFound.firstName }
+            userFound.lastName = usuarioActualizado.lastName.ifEmpty { userFound.lastName }
+            userFound.password = usuarioActualizado.password.ifEmpty { userFound.password }
+            userFound.mail = usuarioActualizado.mail.ifEmpty { userFound.mail }
+            userFound.role = usuarioActualizado.role.ifEmpty { userFound.role }
+
+            val updatedPerson = personRepository.save(userFound)
+
+        return Usuario(
+            id = updatedPerson.id,
+            userName = updatedPerson.userName,
+            firstName = updatedPerson.firstName,
+            lastName = updatedPerson.lastName,
+            mail = updatedPerson.mail,
+            token = "***", // Ocultar token por seguridad
+            password = "***", // No devolver la contraseña
+            role = updatedPerson.role
+        )
+    }
+
 }

@@ -66,7 +66,7 @@ class UserController(var userService: UserService) {
             ResponseEntity.ok("Sesión finalizada")
         }
     }
-/*
+
     /**
      * Endpoint para obtener la información del usuario autenticado.
      * @param token Token de autorización.
@@ -82,14 +82,40 @@ class UserController(var userService: UserService) {
         }
     }
 
-    /**
+    @PutMapping("/me")
+    fun updateMe(@RequestHeader("Authorization") token: String, @RequestBody updatedUserBody:UserBody): ResponseEntity<Usuario> {
+        val updatedUser = Usuario(
+            userName = updatedUserBody.userName,
+            firstName = updatedUserBody.firstName,
+            lastName = updatedUserBody.lastName,
+            password = updatedUserBody.password,
+            mail = updatedUserBody.mail,
+            role = updatedUserBody.role
+        )
+        val successLogout = userService.updateMe(token, updatedUser)
+        return if (successLogout != null) {
+            //ResponseEntity.badRequest().build()
+            ResponseEntity.ok(successLogout)
+
+        } else {
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+        }
+    }
+
+
+
+
+
+
+     /*
      * Endpoint para obtener la lista de todos los usuarios registrados.
      * @return ResponseEntity con la lista de usuarios.
      */
+        /*
     @GetMapping
     fun getAllUsers(): ResponseEntity<Any> {
         val result = userService.retrieveAllUser()
         return ResponseEntity.ok(result)
-    }
-}*/
+    }*/
 }
+
