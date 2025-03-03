@@ -7,10 +7,10 @@ import org.springframework.data.repository.CrudRepository
 interface PersonRepository : CrudRepository<Person, Int> {
 
     @Query(value = "SELECT * FROM person WHERE correo=?1", nativeQuery = true)
-    fun findByEmail(email: String): Person?
+    fun findByMail(mail: String): Person?
 
     @Query(value = "SELECT * FROM person WHERE mail=?1 AND password=?2", nativeQuery = true)
-    fun findByEmailAndPassword(email: String, password: String): Person?
+    fun findByMailAndPassword(mail: String, password: String): Person?
 
     @Query(value = "SELECT * FROM person WHERE token=?1", nativeQuery = true)
     fun findByToken(token: String): Person?

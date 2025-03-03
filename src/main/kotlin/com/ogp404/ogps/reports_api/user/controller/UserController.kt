@@ -41,15 +41,16 @@ class UserController(var userService: UserService) {
      * @param loginUserBody Datos del usuario (correo y contraseña) para autenticación.
      * @return ResponseEntity con la información del usuario si la autenticación es exitosa, o 404 si falla.
      */
-    /* @PostMapping("/login")
+     @PostMapping("/login")
     fun login(@RequestBody loginUserBody: LoginUserBody): ResponseEntity<Usuario> {
         val result = userService.login(loginUserBody.mail, loginUserBody.password)
         return if (result == null) {
-            ResponseEntity.notFound().build()
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         } else {
             ResponseEntity.ok(result)
         }
     }
+
 
     /**
      * Endpoint para cerrar sesión.
@@ -65,7 +66,7 @@ class UserController(var userService: UserService) {
             ResponseEntity.ok("Sesión finalizada")
         }
     }
-
+/*
     /**
      * Endpoint para obtener la información del usuario autenticado.
      * @param token Token de autorización.

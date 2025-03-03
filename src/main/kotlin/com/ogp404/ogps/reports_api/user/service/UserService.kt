@@ -56,7 +56,7 @@ class UserService(
         )
     }
 
-    fun retrieveAllUser(): List<Usuario> {
+    /*fun retrieveAllUser(): List<Usuario> {
         return personRepository.findAll().map { person ->
             Usuario(
                 id = person.id,
@@ -69,43 +69,45 @@ class UserService(
                 role = person.role,
             )
         }
-    }
-
-    /* fun login(mail: String, password: String): Usuario? {
-
-        val userFound = userRepository.findByMailAndPassword(mail, password)
-
-        return userFound?.let {
-            val token = UUID.randomUUID().toString()
-            updateTokenUser(it, token)
-            Usuario(
-                id = it.id.toString(),
-                userName = it.userName,
-                firstName = it.firstName,
-                lastName = it.lastName,
-                mail = it.mail,
-                token = token,
-                password = it.password,
-                role = it.role,
-            )
-        }
     }*/
+
+    fun login(mail: String, password: String): Usuario? {
+        val userFound = personRepository.findByMailAndPassword(mail, password)
+
+        return if (userFound != null) {
+            val token = UUID.randomUUID().toString()
+            updateTokenUser(userFound, token)
+            Usuario(
+                id = userFound.id,
+                userName = userFound.userName,
+                firstName = userFound.firstName,
+                lastName = userFound.lastName,
+                mail = userFound.mail,
+                token = token,
+                password = userFound.password,
+                role = userFound.role,
+            )
+        } else{
+            userFound
+        }
+    }
 
     fun updateTokenUser(user: Person, token: String) {
         user.token = token
-        personRepository.save(user)
+        personRepository.save(user)  // Guarda la entidad de la persona con el token actualizado.
     }
+
 
     fun logout(token: String): Boolean {
         val userFound = personRepository.findByToken(token)
 
-        return if (userFound != null) {
+         if (userFound != null) {
             userFound.token = null
             personRepository.save(userFound)
-            true
-        } else false
+         return true
+        } else return false
     }
-
+/*
     fun getInfoAboutMe(token: String): Usuario? {
         val userFound = personRepository.findByToken(token)
 
@@ -121,5 +123,5 @@ class UserService(
                 role = it.role,
             )
         }
-    }
+    }*/
 }
