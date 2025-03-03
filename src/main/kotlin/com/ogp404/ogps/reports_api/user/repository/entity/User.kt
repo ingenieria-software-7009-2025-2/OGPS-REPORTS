@@ -1,6 +1,8 @@
 package com.ogp404.ogps.reports_api.user.repository.entity
 
 import jakarta.persistence.*
+import java.sql.Timestamp
+import javax.management.Descriptor
 
 
 @Entity
@@ -57,4 +59,40 @@ class Admin(
     @OneToOne(cascade = [CascadeType.ALL])
     @JoinColumn(name = "id_person", referencedColumnName = "id_person")
     var person: Person
+)
+
+@Entity
+@Table(name = "incident")
+class Incident(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_incident")
+    val idIncident: Int = 0,
+    @ManyToOne
+    @JoinColumn(name = "id_user", referencedColumnName = "id_user")
+    var user: User?= null,
+
+    @ManyToOne
+    @JoinColumn(name = "id_admin", referencedColumnName = "id_admin")
+    var admin: Admin? = null,
+
+    @Column(name = "latitude")
+    var latitude: Double,
+
+    @Column(name = "longitude")
+    var longitude: Double,
+
+    @Column(name = "category")
+    var category: String = "",
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    var description: String = "",
+
+    @Column(name = "status")
+    var status: String = "",
+
+
+    @Column(name = "report_date")
+    val reportDate: Timestamp = Timestamp(System.currentTimeMillis())
+
 )
