@@ -12,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
-class UserService(
+class
+UserService(
     private var personRepository: PersonRepository,
     private val userRepository: UserRepository,
     private val adminRepository: AdminRepository) {

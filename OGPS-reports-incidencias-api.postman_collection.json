@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "b9d159cc-c26a-4879-9fcd-5ccef6c6b7e9",
+		"_postman_id": "d6cc5310-3573-4ae2-890a-7849299ecf82",
 		"name": "OGPS-reports-incidencias-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "42554834"
+		"_exporter_id": "42445546"
 	},
 	"item": [
 		{
@@ -98,6 +98,27 @@
 		},
 		{
 			"name": "http://localhost:8080/v1/user/me",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/user/me",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"user",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://localhost:8080/v1/user/me Copy",
 			"request": {
 				"method": "GET",
 				"header": [],

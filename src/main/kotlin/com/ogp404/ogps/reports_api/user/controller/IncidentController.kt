@@ -15,8 +15,9 @@ import org.springframework.web.bind.annotation.*
 
 
     /**
+     En proceso de desarrollo, pendiente para Iteración02
      * Controlador para gestionar las operaciones relacionadas con los usuarios.
-     */
+
     @Controller
     @RequestMapping("/v1/incident")
     class IncidentController(var incidentService: IncidentService) {
@@ -38,7 +39,7 @@ import org.springframework.web.bind.annotation.*
                 reportDate= incidentBody.reportDate
             )
 
-            val response = incidentService.reportIncident(incidente)
+            val response = incidentService.reportIncident()
             return if (response != null) {
                 ResponseEntity.ok(response)
             } else {
@@ -47,3 +48,4 @@ import org.springframework.web.bind.annotation.*
         }
 
     }
+     */

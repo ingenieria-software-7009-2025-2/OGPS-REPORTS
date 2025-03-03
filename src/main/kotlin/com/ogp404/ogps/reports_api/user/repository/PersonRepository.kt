@@ -3,7 +3,9 @@ package com.ogp404.ogps.reports_api.user.repository
 import com.ogp404.ogps.reports_api.user.repository.entity.Person
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.CrudRepository
+import org.springframework.stereotype.Repository
 
+@Repository
 interface PersonRepository : CrudRepository<Person, Int> {
 
     @Query(value = "SELECT * FROM person WHERE correo=?1", nativeQuery = true)
