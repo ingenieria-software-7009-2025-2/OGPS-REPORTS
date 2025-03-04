@@ -51,6 +51,18 @@ CREATE TABLE validation_request (
     quantity INT NOT NULL
 );
 
+CREATE TABLE manage_status (
+    id_incident INT NOT NULL REFERENCES incident(id_incident) ON DELETE CASCADE,
+  	id_admin INT NOT NULL REFERENCES administrator(id_admin) ON DELETE cascade
+);
+
+CREATE TABLE reports (
+    id_user INT NOT NULL REFERENCES users(id_user) ON DELETE CASCADE,
+  	id_incident INT NOT NULL REFERENCES incident(id_incident) ON DELETE cascade
+);
+
+
+
 
 
 
