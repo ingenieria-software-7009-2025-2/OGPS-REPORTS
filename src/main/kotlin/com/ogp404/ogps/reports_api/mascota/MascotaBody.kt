@@ -1,4 +1,4 @@
-package com.ogp404.ogps.reports_api
+package com.ogp404.ogps.reports_api.mascota
 
 data class MascotaBody(
     val tipo: String = "",
