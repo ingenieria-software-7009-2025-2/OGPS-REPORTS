@@ -33,7 +33,7 @@ CREATE TABLE incident (
     category VARCHAR(50) NOT NULL CHECK (category IN ('Potholes and Defects', 'Street Lighting', 'Traffic Accidents', 'Obstacles', 'Other')),
     description TEXT,
     status VARCHAR(50) CHECK (status IN ('Reported', 'In Process', 'Resolved')) NOT NULL,
-    report_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    report_date VARCHAR(50)
 );
 
 
