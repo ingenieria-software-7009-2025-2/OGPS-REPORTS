@@ -2,7 +2,7 @@ package com.ogp404.ogps.reports_api
 //La creación del import se genera en automatico cuando lo haces via Intellij
 // Click derecho > new Kotlin class
 
-
+//Foooo
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
