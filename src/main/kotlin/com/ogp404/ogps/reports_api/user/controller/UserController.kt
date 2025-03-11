@@ -45,7 +45,7 @@ class UserController(var userService: UserService) {
     fun login(@RequestBody loginUserBody: LoginUserBody): ResponseEntity<Usuario> {
         val result = userService.login(loginUserBody.mail, loginUserBody.password)
         return if (result == null) {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+            ResponseEntity.status(404).build()
         } else {
             ResponseEntity.ok(result)
         }
