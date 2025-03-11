@@ -1,13 +1,13 @@
 {
 	"info": {
-		"_postman_id": "7944bd75-3bf3-42ee-a643-5ceb7c079bcf",
+		"_postman_id": "fdbab960-55ba-41b7-afe0-876848dbb1bf",
 		"name": "OGPS-reports-incidencias-api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "42445559"
+		"_exporter_id": "42131197"
 	},
 	"item": [
 		{
-			"name": "http://localhost:8080/v1/users",
+			"name": "Crear Usuario",
 			"request": {
 				"method": "POST",
 				"header": [],
@@ -36,13 +36,13 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:8080/v1/users/login",
+			"name": "Login",
 			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"mail\": \"geovanimoxito@gmail.com\",\r\n  \"password\": \"Geovanibbcito_20\"\r\n}",
+					"raw": "{\r\n  \"mail\": \"geovanimoxito@gmail.com\",\r\n  \"password\": \"Geovanibbcito_201\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -66,7 +66,7 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:8080/v1/users/logout",
+			"name": "Logout",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -102,7 +102,7 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:8080/v1/users/me",
+			"name": "Get_Info",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -141,13 +141,13 @@
 			"response": []
 		},
 		{
-			"name": "http://localhost:8080/v1/user/me Copy",
+			"name": "Update_Info",
 			"request": {
 				"method": "PUT",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "2f534942-6330-41f3-972b-7d9404d6453f",
+						"value": "f2f9ab25-06ff-471f-9551-488fb4f15e9e",
 						"type": "text"
 					}
 				],
