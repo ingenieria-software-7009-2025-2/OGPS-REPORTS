@@ -1,3 +1,6 @@
+drop schema if exists OGPS_esquema cascade;
+create schema OGPS_esquema;
+
 CREATE TABLE person (
     id_person SERIAL PRIMARY KEY,
     user_name VARCHAR(255),
