@@ -3,11 +3,13 @@ package com.ogp404.ogps.reports_api.user.controller
 import com.ogp404.ogps.reports_api.user.controller.body.LoginUserBody
 import com.ogp404.ogps.reports_api.user.controller.body.UserBody
 import com.ogp404.ogps.reports_api.user.domain.Usuario
+import com.ogp404.ogps.reports_api.user.repository.PersonRepository
 import com.ogp404.ogps.reports_api.user.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 /**
  * Controlador para gestionar las operaciones relacionadas con los usuarios.
@@ -36,18 +38,13 @@ class UserController(var userService: UserService) {
         return ResponseEntity.ok(response)
     }
 
-    /**
-     * Endpoint para iniciar sesión.
-     * @param loginUserBody Datos del usuario (correo y contraseña) para autenticación.
-     * @return ResponseEntity con la información del usuario si la autenticación es exitosa, o 404 si falla.
-     */
-     @PostMapping("/login")
-    fun login(@RequestBody loginUserBody: LoginUserBody): ResponseEntity<Usuario> {
-        val result = userService.login(loginUserBody.mail, loginUserBody.password)
-        return if (result == null) {
-            ResponseEntity.status(404).build()
-        } else {
+    @PostMapping("/login")
+    fun login(@RequestBody loginUserBody: LoginUserBody): ResponseEntity<Any> {
+        return try {
+            val result = userService.login(loginUserBody.mail, loginUserBody.password)
             ResponseEntity.ok(result)
+        } catch (ex: ResponseStatusException) {
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
         }
     }
 
