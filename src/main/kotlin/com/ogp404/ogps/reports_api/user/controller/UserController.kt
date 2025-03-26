@@ -68,7 +68,7 @@ class UserController(var userService: UserService) {
         return ResponseEntity.ok(response)
     } catch (ex: ResponseStatusException)
     {
-        ResponseEntity.status(ex.statusCode).body(mapOf("error"to ex.reason))
+        ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
     }
     }
 
