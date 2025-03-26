@@ -20,8 +20,24 @@ UserService(
     private val userRepository: UserRepository,
     private val adminRepository: AdminRepository) {
 
+    fun isValidMail(mail: String): Boolean {
+        val mailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
+        return mail.matches(mailRegex)
+    }
+
+    fun isValidName(name: String): Boolean {
+        val nameRegex = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$".toRegex()
+        return name.matches(nameRegex)
+    }
     @Transactional
     fun addUser(usuario: Usuario): Usuario {
+
+        if (!isValidName(usuario.firstName)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre no puede contener números")
+        }
+        if (!isValidName(usuario.lastName)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El apellido no puede contener números")
+        }
 
         if (personRepository.findByUserName(usuario.userName) != null) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "El nombre de usuario ya está en uso")
@@ -64,6 +80,7 @@ UserService(
             password = savedPerson.password,
             role = savedPerson.role
         )
+
     }
 
     /*fun retrieveAllUser(): List<Usuario> {
