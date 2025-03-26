@@ -15,51 +15,45 @@ import org.springframework.web.server.ResponseStatusException
 import org.springframework.http.HttpStatus
 
 @Service
-class
-UserService(
+class UserService(
     private var personRepository: PersonRepository,
     private val userRepository: UserRepository,
-    private val adminRepository: AdminRepository) {
-
-    fun isValidMail(mail: String): Boolean {
-        val mailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
-        return mail.matches(mailRegex)
-    }
-
-    fun isValidName(name: String): Boolean {
-        val nameRegex = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$".toRegex()
-        return name.matches(nameRegex)
-    }
-
-    fun isValidPassword(password: String): Boolean {
-        val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*()_+\$[$\$]{};':\"\\|,.<>/?]).{8,}$".toRegex()
-        return password.matches(passwordRegex)
-    }
+    private val adminRepository: AdminRepository
+) {
 
     @Transactional
     fun addUser(usuario: Usuario): Usuario {
+        // Definir las expresiones regulares dentro de la función
+        val emailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
+        val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*()_+\$[$\$]{};':\"\\|,.<>/?]).{8,}$".toRegex()
+        val nameRegex = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$".toRegex()
 
-        if (!isValidName(usuario.firstName)) {
+        // Validar el nombre
+        if (!usuario.firstName.matches(nameRegex)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre no puede contener números")
         }
-        if (!isValidName(usuario.lastName)) {
+        if (!usuario.lastName.matches(nameRegex)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El apellido no puede contener números")
         }
 
-        if (!isValidMail(usuario.mail)) {
+        // Validar el correo
+        if (!usuario.mail.matches(emailRegex)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo con formato inválido")
         }
 
-        if(!isValidPassword(usuario.password)){
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo electrónico no es válido")
+        // Validar la contraseña
+        if (!usuario.password.matches(passwordRegex)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Contraseña débil, debe contener al menos 1 mayúscula, 1 número, 1 carácter especial y 8 caracteres")
         }
 
+        // Validar duplicados
         if (personRepository.findByUserName(usuario.userName) != null) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "El nombre de usuario ya está en uso")
         }
         if (personRepository.findByMail(usuario.mail) != null) {
             throw ResponseStatusException(HttpStatus.CONFLICT, "El correo ya está registrado")
         }
+
         val personEntity = Person(
             id = usuario.id,
             userName = usuario.userName,
@@ -80,7 +74,7 @@ UserService(
                 adminRepository.save(adminEntity)
             }
             else -> {
-                val userEntity = User(person =  savedPerson)
+                val userEntity = User(person = savedPerson)
                 userRepository.save(userEntity)
             }
         }
@@ -95,26 +89,13 @@ UserService(
             password = savedPerson.password,
             role = savedPerson.role
         )
-
     }
 
-    /*fun retrieveAllUser(): List<Usuario> {
-        return personRepository.findAll().map { person ->
-            Usuario(
-                id = person.id,
-                userName = person.userName,
-                firstName = person.firstName,
-                lastName = person.lastName,
-                mail = person.mail,
-                token = person.token,
-                password = person.password,
-                role = person.role,
-            )
-        }
-    }*/
-
     fun login(mail: String, password: String): Usuario {
-        if (!isValidEmail(mail)) {
+        // Definir la expresión regular dentro de la función
+        val emailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
+
+        if (!mail.matches(emailRegex)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo con formato inválido")
         }
 
@@ -143,16 +124,10 @@ UserService(
         )
     }
 
-    fun isValidEmail(email: String): Boolean {
-        val emailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
-        return email.matches(emailRegex)
-    }
-
     fun updateTokenUser(user: Person, token: String) {
         user.token = token
         personRepository.save(user)  // Guarda la entidad de la persona con el token actualizado.
     }
-
 
     fun logout(token: String): Boolean {
         val userFound = personRepository.findByToken(token)
@@ -275,5 +250,4 @@ UserService(
             role = updatedPerson.role
         )
     }
-
 }
