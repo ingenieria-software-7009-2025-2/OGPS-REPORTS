@@ -22,6 +22,13 @@ UserService(
 
     @Transactional
     fun addUser(usuario: Usuario): Usuario {
+       if (!isValidEmail(mail)) {
+           throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo con formato inválido")
+
+           val userFound = personRepository.findByMail(mail)
+           if (userFound == null) {
+               throw ResponseStatusException(HttpStatus.NOT_FOUND, "Correo no registrado")
+           }
         val personEntity = Person(
             id = usuario.id,
             userName = usuario.userName,

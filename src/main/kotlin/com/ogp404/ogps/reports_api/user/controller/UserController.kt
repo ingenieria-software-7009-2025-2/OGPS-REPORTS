@@ -54,6 +54,7 @@ class UserController(var userService: UserService) {
         @SwaggerRequestBody(description = "User registration details")
         @RequestBody userBody: UserBody
     ): ResponseEntity<Any> {
+        return try {
         // Convertir los datos del request a un objeto del dominio
         val usuario = Usuario(
             userName = userBody.userName,
@@ -65,6 +66,10 @@ class UserController(var userService: UserService) {
         )
         val response = userService.addUser(usuario)
         return ResponseEntity.ok(response)
+    } catch (ex: ResponseStatusException)
+    {
+        ResponseEntity.status(ex.statusCode).body(mapOf("error"to ex.reason))
+    }
     }
 
     /**
