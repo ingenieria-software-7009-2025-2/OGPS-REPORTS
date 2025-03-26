@@ -29,6 +29,12 @@ UserService(
         val nameRegex = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$".toRegex()
         return name.matches(nameRegex)
     }
+
+    fun isValidPassword(password: String): Boolean {
+        val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*()_+\$[$\$]{};':\"\\|,.<>/?]).{8,}$".toRegex()
+        return password.matches(passwordRegex)
+    }
+
     @Transactional
     fun addUser(usuario: Usuario): Usuario {
 
@@ -37,6 +43,14 @@ UserService(
         }
         if (!isValidName(usuario.lastName)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El apellido no puede contener números")
+        }
+
+        if (!isValidMail(usuario.mail)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo con formato inválido")
+        }
+
+        if(!isValidPassword(usuario.password)){
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo electrónico no es válido")
         }
 
         if (personRepository.findByUserName(usuario.userName) != null) {
