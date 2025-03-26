@@ -7,6 +7,7 @@ import com.ogp404.ogps.reports_api.user.repository.AdminRepository
 import com.ogp404.ogps.reports_api.user.repository.entity.Person
 import com.ogp404.ogps.reports_api.user.repository.entity.User
 import com.ogp404.ogps.reports_api.user.repository.entity.Admin
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -143,26 +144,96 @@ UserService(
     }
 
     @Transactional
-    fun updateMe(token: String, usuarioActualizado: Usuario): Usuario?{
-        val userFound = personRepository.findByToken(token)?: return null
+    fun updateMe(token: String, usuarioActualizado: Usuario): Usuario? {
+        val userFound = personRepository.findByToken(token) ?: return null
 
-        userFound.userName = usuarioActualizado.userName.ifEmpty { userFound.userName }
-        userFound.firstName = usuarioActualizado.firstName.ifEmpty { userFound.firstName }
-        userFound.lastName = usuarioActualizado.lastName.ifEmpty { userFound.lastName }
-        userFound.password = usuarioActualizado.password.ifEmpty { userFound.password }
-        userFound.mail = usuarioActualizado.mail.ifEmpty { userFound.mail }
-        userFound.role = usuarioActualizado.role.ifEmpty { userFound.role }
+        val emailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex()
+        val passwordRegex = "^(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$".toRegex()
+        val nameRegex = "^[a-zA-ZÁÉÍÓÚáéíóúÑñ]{2,}$".toRegex()
+        val userNameRegex = "^[a-zA-Z0-9._-]{3,}$".toRegex()
+
+        usuarioActualizado.userName.takeIf { it.isNotBlank() }?.let { newUserName ->
+            if (!newUserName.matches(userNameRegex)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid username format, must be at least 3 characters and can only contain letters, numbers, hyphens, or periods"
+                )
+            }
+            if (newUserName == userFound.userName) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "You already have this information")
+            }
+            val existingUserName = personRepository.findByUserName(newUserName)
+            if (existingUserName != null && existingUserName.id != userFound.id) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "Username already in use")
+            }
+            userFound.userName = newUserName
+        }
+
+        usuarioActualizado.mail.takeIf { it.isNotBlank() }?.let { newMail ->
+            if (!newMail.matches(emailRegex)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid email format, only gmail, outlook, and hotmail domains are accepted"
+                )
+            }
+            if (newMail == userFound.mail) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "You already have this information")
+            }
+            val existingUser = personRepository.findByMail(newMail)
+            if (existingUser != null && existingUser.id != userFound.id) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "Email already in use")
+            }
+            userFound.mail = newMail
+        }
+
+        usuarioActualizado.password.takeIf { it.isNotBlank() }?.let { newPassword ->
+            if (!newPassword.matches(passwordRegex)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Weak password, must contain at least 1 uppercase letter, 1 number, 1 special character, and be at least 8 characters long"
+                )
+            }
+            if (newPassword == userFound.password) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "You already have this information")
+            }
+            userFound.password = newPassword
+        }
+
+        usuarioActualizado.firstName.takeIf { it.isNotBlank() }?.let { newFirstName ->
+            if (!newFirstName.matches(nameRegex)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid first name, use at least 2 letters and no special characters"
+                )
+            }
+            if (newFirstName == userFound.firstName) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "You already have this information")
+            }
+            userFound.firstName = newFirstName
+        }
+
+        usuarioActualizado.lastName.takeIf { it.isNotBlank() }?.let { newLastName ->
+            if (!newLastName.matches(nameRegex)) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid last name, use at least 2 letters and no special characters"
+                )
+            }
+            if (newLastName == userFound.lastName) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "You already have this information")
+            }
+            userFound.lastName = newLastName
+        }
 
         val updatedPerson = personRepository.save(userFound)
-
         return Usuario(
             id = updatedPerson.id,
             userName = updatedPerson.userName,
             firstName = updatedPerson.firstName,
             lastName = updatedPerson.lastName,
             mail = updatedPerson.mail,
-            token = "***", // Ocultar token por seguridad
-            password = "***", // No devolver la contraseña
+            token = "***",
+            password = "***",
             role = updatedPerson.role
         )
     }
