@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import org.springframework.dao.DataIntegrityViolationException
 import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 import org.springframework.web.server.ResponseStatusException
 
@@ -72,10 +73,31 @@ class UserController(var userService: UserService) {
     }
     }
 
+    @Operation(
+        summary = "User login",
+        description = "Authenticates a user with their email and password, returning an authentication token if the credentials are valid",
+        responses = [
+            ApiResponse(
+                responseCode = "200",
+                description = "User successfully logged in",
+                content = [Content(schema = Schema(implementation = Usuario::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - Invalid email or password",
+                content = [Content(schema = Schema(implementation = Map::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content = [Content(schema = Schema(implementation = Map::class))]
+            )
+        ]
+    )
     /**
-     * Endpoint para iniciar sesión.
-     * @param loginUserBody Datos del usuario (correo y contraseña) para autenticación.
-     * @return ResponseEntity con la información del usuario si la autenticación es exitosa, o un error con un mensaje.
+     * Endpoint para iniciar sesión de un usuario.
+     * @param loginUserBody Datos de inicio de sesión (correo y contraseña) que se recibirán en la petición.
+     * @return ResponseEntity con la respuesta del servicio.
      */
     @PostMapping("/login")
     fun login(@RequestBody loginUserBody: LoginUserBody): ResponseEntity<Any> {
@@ -137,48 +159,69 @@ class UserController(var userService: UserService) {
     }
 
 
-    // Docuementacion del endpoint para modificar usuario
+    // Documentacion del endpoint para modificar usuario
     @Operation(
-        summary = "Update User Profile",
-        description = "Update information for the currently authenticated user",
+        summary = "Update authenticated user information",
+        description = "Updates the personal information of an authenticated user, such as username, email, password, first name, and last name",
         responses = [
-            ApiResponse(responseCode = "200", description = "User profile updated"),
-            ApiResponse(responseCode = "401", description = "Unauthorized")
+            ApiResponse(
+                responseCode = "200",
+                description = "User information successfully updated",
+                content = [Content(schema = Schema(implementation = Usuario::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized user - Invalid or missing token",
+                content = [Content(schema = Schema(implementation = String::class))]
+            ),
+            ApiResponse(
+                responseCode = "409",
+                description = "Conflict - Username or email already in use, or attempting to update with existing information",
+                content = [Content(schema = Schema(implementation = String::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content = [Content(schema = Schema(implementation = String::class))]
+            )
         ]
     )
+    /**
+     * Endpoint para actualizar la información del usuario autenticado.
+     * @param token Token de autenticación proporcionado en el header Authorization.
+     * @param updatedUserBody Datos actualizados del usuario que se recibirán en la petición.
+     * @return ResponseEntity con la respuesta del servicio.
+     */
     @PutMapping("/me")
     fun updateMe(
-        @SwaggerRequestBody(description = "Updated user details")
         @RequestHeader("Authorization") token: String,
-        @RequestBody updatedUserBody:UserBody
-    ): ResponseEntity<Usuario> {
-        val updatedUser = Usuario(
-            userName = updatedUserBody.userName,
-            firstName = updatedUserBody.firstName,
-            lastName = updatedUserBody.lastName,
-            password = updatedUserBody.password,
-            mail = updatedUserBody.mail,
-            role = updatedUserBody.role
-        )
-        val successLogout = userService.updateMe(token, updatedUser)
-        return if (successLogout != null) {
-            //ResponseEntity.badRequest().build()
-            ResponseEntity.ok(successLogout)
-
-        } else {
-            ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
+        @RequestBody updatedUserBody: UserBody
+    ): ResponseEntity<Any> {
+        return try {
+            val updatedUser = Usuario(
+                userName = updatedUserBody.userName ?: "",
+                firstName = updatedUserBody.firstName ?: "",
+                lastName = updatedUserBody.lastName ?: "",
+                password = updatedUserBody.password ?: "",
+                mail = updatedUserBody.mail ?: "",
+                role = updatedUserBody.role ?: "User"
+            )
+            val successUpdate = userService.updateMe(token, updatedUser)
+                ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized user")
+            ResponseEntity.ok(successUpdate)
+        } catch (ex: ResponseStatusException) {
+            ResponseEntity.status(ex.statusCode).body(ex.reason)
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.message)
         }
     }
 
 
 
-
-
-
-     /*
-     * Endpoint para obtener la lista de todos los usuarios registrados.
-     * @return ResponseEntity con la lista de usuarios.
-     */
+    /*
+    * Endpoint para obtener la lista de todos los usuarios registrados.
+    * @return ResponseEntity con la lista de usuarios.
+    */
         /*
     @GetMapping
     fun getAllUsers(): ResponseEntity<Any> {
