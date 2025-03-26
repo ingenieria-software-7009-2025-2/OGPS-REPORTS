@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface PersonRepository : CrudRepository<Person, Int> {
 
-    @Query(value = "SELECT * FROM person WHERE correo=?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM person WHERE mail=?1", nativeQuery = true)
     fun findByMail(mail: String): Person?
 
     @Query(value = "SELECT * FROM person WHERE mail=?1 AND password=?2", nativeQuery = true)
@@ -16,4 +16,7 @@ interface PersonRepository : CrudRepository<Person, Int> {
 
     @Query(value = "SELECT * FROM person WHERE token=?1", nativeQuery = true)
     fun findByToken(token: String): Person?
+
+    @Query(value = "SELECT * FROM person WHERE user_name=?1", nativeQuery = true)
+    fun findByUserName(username: String): Person?
 }

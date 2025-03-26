@@ -10,6 +10,8 @@ import com.ogp404.ogps.reports_api.user.repository.entity.Admin
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+import org.springframework.web.server.ResponseStatusException
+import org.springframework.http.HttpStatus
 
 @Service
 class
@@ -18,8 +20,45 @@ UserService(
     private val userRepository: UserRepository,
     private val adminRepository: AdminRepository) {
 
-   @Transactional
+    fun isValidMail(mail: String): Boolean {
+        val mailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
+        return mail.matches(mailRegex)
+    }
+
+    fun isValidName(name: String): Boolean {
+        val nameRegex = "^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$".toRegex()
+        return name.matches(nameRegex)
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        val passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%^&*()_+\$[$\$]{};':\"\\|,.<>/?]).{8,}$".toRegex()
+        return password.matches(passwordRegex)
+    }
+
+    @Transactional
     fun addUser(usuario: Usuario): Usuario {
+
+        if (!isValidName(usuario.firstName)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre no puede contener números")
+        }
+        if (!isValidName(usuario.lastName)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El apellido no puede contener números")
+        }
+
+        if (!isValidMail(usuario.mail)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo con formato inválido")
+        }
+
+        if(!isValidPassword(usuario.password)){
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "El correo electrónico no es válido")
+        }
+
+        if (personRepository.findByUserName(usuario.userName) != null) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "El nombre de usuario ya está en uso")
+        }
+        if (personRepository.findByMail(usuario.mail) != null) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "El correo ya está registrado")
+        }
         val personEntity = Person(
             id = usuario.id,
             userName = usuario.userName,
@@ -55,6 +94,7 @@ UserService(
             password = savedPerson.password,
             role = savedPerson.role
         )
+
     }
 
     /*fun retrieveAllUser(): List<Usuario> {
@@ -72,25 +112,39 @@ UserService(
         }
     }*/
 
-    fun login(mail: String, password: String): Usuario? {
-        val userFound = personRepository.findByMailAndPassword(mail, password)
-
-        return if (userFound != null) {
-            val token = UUID.randomUUID().toString()
-            updateTokenUser(userFound, token)
-            Usuario(
-                id = userFound.id,
-                userName = userFound.userName,
-                firstName = userFound.firstName,
-                lastName = userFound.lastName,
-                mail = userFound.mail,
-                token = token,
-                password = userFound.password,
-                role = userFound.role,
-            )
-        } else{
-            userFound
+    fun login(mail: String, password: String): Usuario {
+        if (!isValidEmail(mail)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Correo con formato inválido")
         }
+
+        val userFound = personRepository.findByMail(mail)
+
+        if (userFound == null) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "Correo no registrado")
+        }
+
+        if (userFound.password != password) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña incorrecta")
+        }
+
+        val token = UUID.randomUUID().toString()
+        updateTokenUser(userFound, token)
+
+        return Usuario(
+            id = userFound.id,
+            userName = userFound.userName,
+            firstName = userFound.firstName,
+            lastName = userFound.lastName,
+            mail = userFound.mail,
+            token = token,
+            password = userFound.password,
+            role = userFound.role,
+        )
+    }
+
+    fun isValidEmail(email: String): Boolean {
+        val emailRegex = "^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\\.com$".toRegex(RegexOption.IGNORE_CASE)
+        return email.matches(emailRegex)
     }
 
     fun updateTokenUser(user: Person, token: String) {
@@ -102,10 +156,10 @@ UserService(
     fun logout(token: String): Boolean {
         val userFound = personRepository.findByToken(token)
 
-         if (userFound != null) {
+        if (userFound != null) {
             userFound.token = null
             personRepository.save(userFound)
-         return true
+            return true
         } else return false
     }
 
@@ -130,14 +184,14 @@ UserService(
     fun updateMe(token: String, usuarioActualizado: Usuario): Usuario?{
         val userFound = personRepository.findByToken(token)?: return null
 
-            userFound.userName = usuarioActualizado.userName.ifEmpty { userFound.userName }
-            userFound.firstName = usuarioActualizado.firstName.ifEmpty { userFound.firstName }
-            userFound.lastName = usuarioActualizado.lastName.ifEmpty { userFound.lastName }
-            userFound.password = usuarioActualizado.password.ifEmpty { userFound.password }
-            userFound.mail = usuarioActualizado.mail.ifEmpty { userFound.mail }
-            userFound.role = usuarioActualizado.role.ifEmpty { userFound.role }
+        userFound.userName = usuarioActualizado.userName.ifEmpty { userFound.userName }
+        userFound.firstName = usuarioActualizado.firstName.ifEmpty { userFound.firstName }
+        userFound.lastName = usuarioActualizado.lastName.ifEmpty { userFound.lastName }
+        userFound.password = usuarioActualizado.password.ifEmpty { userFound.password }
+        userFound.mail = usuarioActualizado.mail.ifEmpty { userFound.mail }
+        userFound.role = usuarioActualizado.role.ifEmpty { userFound.role }
 
-            val updatedPerson = personRepository.save(userFound)
+        val updatedPerson = personRepository.save(userFound)
 
         return Usuario(
             id = updatedPerson.id,

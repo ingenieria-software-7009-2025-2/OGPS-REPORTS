@@ -3,6 +3,7 @@ package com.ogp404.ogps.reports_api.user.controller
 import com.ogp404.ogps.reports_api.user.controller.body.LoginUserBody
 import com.ogp404.ogps.reports_api.user.controller.body.UserBody
 import com.ogp404.ogps.reports_api.user.domain.Usuario
+import com.ogp404.ogps.reports_api.user.repository.PersonRepository
 import com.ogp404.ogps.reports_api.user.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
+import org.springframework.web.server.ResponseStatusException
+
 /**
  * Controlador para gestionar las operaciones relacionadas con los usuarios.
  */
@@ -51,6 +54,7 @@ class UserController(var userService: UserService) {
         @SwaggerRequestBody(description = "User registration details")
         @RequestBody userBody: UserBody
     ): ResponseEntity<Any> {
+        return try {
         // Convertir los datos del request a un objeto del dominio
         val usuario = Usuario(
             userName = userBody.userName,
@@ -62,36 +66,26 @@ class UserController(var userService: UserService) {
         )
         val response = userService.addUser(usuario)
         return ResponseEntity.ok(response)
+    } catch (ex: ResponseStatusException)
+    {
+        ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+    }
     }
 
-
-    // Docuementacion del enpoint para iniciar sesion
-    @Operation(
-        summary = "User Login",
-        description = "Authenticate user and generate access token",
-        responses = [
-            ApiResponse(responseCode = "200", description = "Successful login"),
-            ApiResponse(responseCode = "404", description = "Invalid credentials")
-        ]
-    )
     /**
      * Endpoint para iniciar sesión.
      * @param loginUserBody Datos del usuario (correo y contraseña) para autenticación.
-     * @return ResponseEntity con la información del usuario si la autenticación es exitosa, o 404 si falla.
+     * @return ResponseEntity con la información del usuario si la autenticación es exitosa, o un error con un mensaje.
      */
-     @PostMapping("/login")
-    fun login(
-        @SwaggerRequestBody(description = "Login credentials")
-        @RequestBody loginUserBody: LoginUserBody
-    ): ResponseEntity<Usuario> {
-        val result = userService.login(loginUserBody.mail, loginUserBody.password)
-        return if (result == null) {
-            ResponseEntity.status(404).build()
-        } else {
+    @PostMapping("/login")
+    fun login(@RequestBody loginUserBody: LoginUserBody): ResponseEntity<Any> {
+        return try {
+            val result = userService.login(loginUserBody.mail, loginUserBody.password)
             ResponseEntity.ok(result)
+        } catch (ex: ResponseStatusException) {
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
         }
     }
-
 
     // Docuementacion del enpoint para cerrar sesion
     @Operation(
