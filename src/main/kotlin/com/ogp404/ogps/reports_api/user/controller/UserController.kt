@@ -33,15 +33,20 @@ class UserController(var userService: UserService) {
      * responses: Posibles respuestas HTTP del endpoint
     */
 
-    // Docuementacion dell endpoint para crear usuario
+    // Documentacion del endpoint para crear usuario
     @Operation(
-        summary = "Register a new user",
+        summary = "Add a new user",
         description = "Creates a new user account in the system",
         responses = [
             ApiResponse(
                 responseCode = "200",
                 description = "User successfully registered",
                 content = [Content(schema = Schema(implementation = Usuario::class))]
+            ),
+            ApiResponse(
+                responseCode = "409",
+                description = "User or emmail already in use.",
+                content = [Content(schema = Schema(implementation = String::class))]
             )
         ]
     )
