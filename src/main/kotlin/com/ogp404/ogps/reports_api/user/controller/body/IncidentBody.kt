@@ -1,13 +1,12 @@
-package com.ogp404.ogps.reports_api.user.controller.body
+package com.ogp404.ogps.reports_api.incident.controller.body
 
-import com.ogp404.ogps.reports_api.user.repository.entity.Admin
-import java.sql.Timestamp
+import java.util.Date
 
 data class IncidentBody(
+    val category: String,
+    val title: String,
+    val description: String? = null,
     val latitude: Double,
     val longitude: Double,
-    val category: String,
-    val description: String,
-    val status: String,
-    val reportDate: Timestamp
+    val reportDate: Date,
 )

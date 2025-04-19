@@ -82,6 +82,9 @@ class Incident(
     @Column(name = "longitude")
     var longitude: Double,
 
+    @Column(name = "title")
+    var title: String = "",
+
     @Column(name = "category")
     var category: String = "",
 

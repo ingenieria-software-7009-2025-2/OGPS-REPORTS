@@ -11,4 +11,7 @@ import org.springframework.stereotype.Repository
 interface UserRepository : JpaRepository<User, Int>{
     @Query(value = "SELECT * FROM user u WHERE u.person_id = ?", nativeQuery = true)
     fun findByPerson(person: Person): User?
+
+    @Query(value = "SELECT * FROM users u WHERE u.id_person = :personId", nativeQuery = true)
+    fun findByPersonId(personId: Int): User?
 }
