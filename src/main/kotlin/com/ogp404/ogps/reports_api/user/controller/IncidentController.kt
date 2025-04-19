@@ -1,5 +1,9 @@
 package com.ogp404.ogps.reports_api.incident.controller
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.ogp404.ogps.reports_api.incident.controller.body.IncidentBody
 import com.ogp404.ogps.reports_api.incident.service.IncidentService
 import com.ogp404.ogps.reports_api.user.repository.entity.Incident
@@ -22,7 +26,7 @@ class IncidentController(
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun reportIncident(
         @RequestHeader("Authorization") authHeader: String,
-        @RequestPart("incident") incidentBody: IncidentBody,
+        @RequestPart("incident") incidentJson: String,
         @RequestPart("photos") photos: Array<MultipartFile>?
     ): ResponseEntity<Any> {
         return try {
@@ -32,16 +36,23 @@ class IncidentController(
                 throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
             }
 
+            // Deserializamos el JSON manualmente
+            val objectMapper = ObjectMapper()
+            objectMapper.registerModule(JavaTimeModule())
+            objectMapper.registerModule(KotlinModule.Builder().build())
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            val incidentBody: IncidentBody = objectMapper.readValue(incidentJson, IncidentBody::class.java)
+
             // Validamos tipo y tamaño de las fotos (si se enviaron)
             val allowedTypes = setOf("image/jpeg", "image/png", "image/jpg")
             val maxSize = 5 * 1024 * 1024 // 5 MB
 
             photos?.forEach { photo ->
                 if (!allowedTypes.contains(photo.contentType)) {
-                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid file type: ${photo.contentType}")
+                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid file type: \${photo.contentType}")
                 }
                 if (photo.size > maxSize) {
-                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File too large: ${photo.originalFilename}")
+                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File too large: \${photo.originalFilename}")
                 }
             }
 
@@ -52,10 +63,10 @@ class IncidentController(
             }
 
             val photoUrls = photos?.map { photo ->
-                val fileName = "${UUID.randomUUID()}_${photo.originalFilename}"
+                val fileName = "\${UUID.randomUUID()}_\${photo.originalFilename}"
                 val filePath = uploadDir.resolve(fileName)
                 Files.copy(photo.inputStream, filePath)
-                "http://localhost:8080/uploads/$fileName"
+                "http://localhost:8080/uploads/\$fileName"
             } ?: emptyList()
 
             // Llamamos al servicio para registrar el incidente
@@ -66,60 +77,7 @@ class IncidentController(
             ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
         } catch (ex: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(mapOf("error" to "Error reporting incident: ${ex.message}"))
-        }
-    }
-
-    // Opcional: Mantén este endpoint si quieres permitir subir imágenes por separado
-    @PostMapping("/upload-photos", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    fun uploadPhotos(
-        @RequestHeader("Authorization") authHeader: String,
-        @RequestParam("photos") photos: Array<MultipartFile>?
-    ): ResponseEntity<Any> {
-        return try {
-            // Validamos el token
-            val token = authHeader.removePrefix("Bearer ").trim()
-            if (token.isBlank()) {
-                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
-            }
-
-            // Validamos que se hayan enviado fotos
-            if (photos == null || photos.isEmpty()) {
-                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No photos uploaded")
-            }
-
-            // Validamos tipo y tamaño de las fotos
-            val allowedTypes = setOf("image/jpeg", "image/png", "image/jpg")
-            val maxSize = 5 * 1024 * 1024 // 5 MB
-
-            photos.forEach { photo ->
-                if (!allowedTypes.contains(photo.contentType)) {
-                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid file type: ${photo.contentType}")
-                }
-                if (photo.size > maxSize) {
-                    throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File too large: ${photo.originalFilename}")
-                }
-            }
-
-            // Guardamos las fotos y generamos los URLs
-            val uploadDir = Paths.get("uploads")
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir)
-            }
-
-            val photoUrls = photos.map { photo ->
-                val fileName = "${UUID.randomUUID()}_${photo.originalFilename}"
-                val filePath = uploadDir.resolve(fileName)
-                Files.copy(photo.inputStream, filePath)
-                "http://localhost:8080/uploads/$fileName"
-            }
-
-            ResponseEntity.ok(mapOf("photoUrls" to photoUrls))
-        } catch (ex: ResponseStatusException) {
-            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
-        } catch (ex: Exception) {
-            ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(mapOf("error" to "Error uploading images: ${ex.message}"))
+                .body(mapOf("error" to "Error reporting incident: \${ex.message}"))
         }
     }
 }
