@@ -50,11 +50,16 @@ class IncidentController(
             val incidentBody: IncidentBody = objectMapper.readValue(incidentJson, IncidentBody::class.java)
             logger.info("Deserialized incidentBody: $incidentBody")
 
-            // Validamos tipo y tamaño de las fotos (si se enviaron)
+            // Validamos que se haya enviado al menos una foto
+            if (photos == null || photos.isEmpty()) {
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "At least one photo is required")
+            }
+
+            // Validamos tipo y tamaño de las fotos
             val allowedTypes = setOf("image/jpeg", "image/png", "image/jpg")
             val maxSize = 5 * 1024 * 1024 // 5 MB
 
-            photos?.forEach { photo ->
+            photos.forEach { photo ->
                 logger.info("Processing photo: ${photo.originalFilename}, size: ${photo.size}, type: ${photo.contentType}")
                 if (!allowedTypes.contains(photo.contentType)) {
                     throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid file type: ${photo.contentType}")
@@ -62,7 +67,6 @@ class IncidentController(
                 if (photo.size > maxSize) {
                     throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File too large: ${photo.originalFilename}")
                 }
-                // Validar que originalFilename no sea null ni vacío
                 if (photo.originalFilename.isNullOrBlank()) {
                     throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File name cannot be empty")
                 }
@@ -80,7 +84,7 @@ class IncidentController(
                 }
             }
 
-            val photoUrls = photos?.map { photo ->
+            val photoUrls = photos.map { photo ->
                 try {
                     val fileName = "${UUID.randomUUID()}_${photo.originalFilename}"
                     val filePath = uploadDir.resolve(fileName)
@@ -91,7 +95,7 @@ class IncidentController(
                     logger.error("Failed to save photo ${photo.originalFilename}: ${e.message}", e)
                     throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save photo: ${e.message}")
                 }
-            } ?: emptyList()
+            }
             logger.info("Generated photo URLs: $photoUrls")
 
             // Llamamos al servicio para registrar el incidente
