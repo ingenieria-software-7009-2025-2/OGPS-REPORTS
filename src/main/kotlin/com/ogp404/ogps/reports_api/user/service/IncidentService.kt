@@ -134,4 +134,19 @@ class IncidentService(
 
         return savedIncident
     }
+
+    fun getIncidentsByUserToken(token: String): List<Incident> {
+        val person = personRepository.findByToken(token)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+
+        if (person.role != "User") {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only users can view their incidents")
+        }
+
+        val user = userRepository.findByPersonId(person.id)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for this person")
+
+        return incidentRepository.findAllByUserIdUser(user.idUser)
+    }
+
 }

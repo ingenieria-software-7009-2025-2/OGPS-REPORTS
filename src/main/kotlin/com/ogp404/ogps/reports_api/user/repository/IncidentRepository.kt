@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface IncidentRepository : JpaRepository<Incident, Int>{
-
+    fun findAllByUserIdUser(userId: Int): List<Incident>
 }

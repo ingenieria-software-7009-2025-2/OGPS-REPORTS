@@ -84,7 +84,7 @@ class IncidentController(
                 }
             }
 
-            val photoUrls = photos.map { photo ->
+            val photoUrls = photos?.map { photo ->
                 try {
                     val fileName = "${UUID.randomUUID()}_${photo.originalFilename}"
                     val filePath = uploadDir.resolve(fileName)
@@ -95,7 +95,7 @@ class IncidentController(
                     logger.error("Failed to save photo ${photo.originalFilename}: ${e.message}", e)
                     throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save photo: ${e.message}")
                 }
-            }
+            } ?: emptyList()
             logger.info("Generated photo URLs: $photoUrls")
 
             // Llamamos al servicio para registrar el incidente
@@ -166,6 +166,26 @@ class IncidentController(
         } catch (ex: Exception) {
             ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(mapOf("error" to "Error uploading images: ${ex.message}"))
+        }
+    }
+
+    @GetMapping("/my-reports")
+    fun getMyIncidents(
+        @RequestHeader("Authorization") authHeader: String
+    ): ResponseEntity<Any> {
+        return try {
+            val token = authHeader.removePrefix("Bearer ").trim()
+            if (token.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+            }
+
+            val incidents = incidentService.getIncidentsByUserToken(token)
+            ResponseEntity.ok(incidents)
+        } catch (ex: ResponseStatusException) {
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Error retrieving incidents: ${ex.message}"))
         }
     }
 }
