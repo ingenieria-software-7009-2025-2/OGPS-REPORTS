@@ -58,6 +58,7 @@ class IncidentController(
             // Validamos tipo y tamaño de las fotos
             val allowedTypes = setOf("image/jpeg", "image/png", "image/jpg")
             val maxSize = 5 * 1024 * 1024 // 5 MB
+            logger.info("Max allowed size for photos: $maxSize bytes (5 MB)")
 
             photos.forEach { photo ->
                 logger.info("Processing photo: ${photo.originalFilename}, size: ${photo.size}, type: ${photo.contentType}")
