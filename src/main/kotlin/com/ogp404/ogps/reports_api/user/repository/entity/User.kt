@@ -1,5 +1,6 @@
 package com.ogp404.ogps.reports_api.user.repository.entity
 
+import com.ogp404.ogps.reports_api.incident.domain.Evidence
 import jakarta.persistence.*
 import java.sql.Timestamp
 import javax.management.Descriptor
@@ -68,9 +69,10 @@ class Incident(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_incident")
     val idIncident: Int = 0,
+
     @ManyToOne
     @JoinColumn(name = "id_user", referencedColumnName = "id_user")
-    var user: User?= null,
+    var user: User? = null,
 
     @ManyToOne
     @JoinColumn(name = "id_admin", referencedColumnName = "id_admin")
@@ -94,8 +96,10 @@ class Incident(
     @Column(name = "status")
     var status: String = "",
 
-
     @Column(name = "report_date")
-    val reportDate: Timestamp = Timestamp(System.currentTimeMillis())
+    val reportDate: Timestamp = Timestamp(System.currentTimeMillis()),
 
+    // Nueva relación para evidencias
+    @OneToMany(mappedBy = "incidentId", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var evidences: MutableList<Evidence> = mutableListOf()
 )

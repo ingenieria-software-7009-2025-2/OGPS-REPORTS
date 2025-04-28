@@ -188,4 +188,28 @@ class IncidentController(
                 .body(mapOf("error" to "Error retrieving incidents: ${ex.message}"))
         }
     }
+
+    @DeleteMapping("/{id}")
+    fun deleteIncident(
+        @RequestHeader("Authorization") authHeader: String,
+        @PathVariable("id") incidentId: Int
+    ): ResponseEntity<Any> {
+        return try {
+            val token = authHeader.removePrefix("Bearer ").trim()
+            if (token.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+            }
+            logger.info("Attempting to delete incident with ID: $incidentId")
+
+            incidentService.deleteIncident(token, incidentId)
+            ResponseEntity.ok(mapOf("message" to "Incident deleted successfully"))
+        } catch (ex: ResponseStatusException) {
+            logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            logger.error("Error deleting incident: ${ex.message}", ex)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Error deleting incident: ${ex.message}"))
+        }
+    }
 }

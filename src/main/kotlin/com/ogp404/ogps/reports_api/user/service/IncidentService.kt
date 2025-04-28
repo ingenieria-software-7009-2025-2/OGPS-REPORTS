@@ -135,7 +135,7 @@ class IncidentService(
         return savedIncident
     }
 
-    fun getIncidentsByUserToken(token: String): List<Incident> {
+    fun getIncidentsByUserToken(token: String): List<Map<String, Any>> {
         val person = personRepository.findByToken(token)
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
 
@@ -146,7 +146,59 @@ class IncidentService(
         val user = userRepository.findByPersonId(person.id)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for this person")
 
-        return incidentRepository.findAllByUserIdUser(user.idUser)
+        val incidents = incidentRepository.findAllByUserIdUser(user.idUser)
+        return incidents.map { incident ->
+            val evidences = evidenceRepository.findByIncidentId(incident.idIncident)
+            mapOf(
+                "idIncident" to incident.idIncident,
+                "title" to incident.title,
+                "status" to incident.status,
+                "reportDate" to incident.reportDate,
+                "latitude" to incident.latitude,
+                "longitude" to incident.longitude,
+                "category" to incident.category,
+                "description" to incident.description,
+                "evidences" to evidences.map { evidence ->
+                    mapOf(
+                        "id" to evidence.id,
+                        "photoUrl" to evidence.photoUrl
+                    )
+                }
+            )
+        }
     }
 
+    @Transactional
+    fun deleteIncident(token: String, incidentId: Int) {
+        val person = personRepository.findByToken(token)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+
+        if (person.role != "User") {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only users can delete their incidents")
+        }
+
+        val user = userRepository.findByPersonId(person.id)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")
+
+        val incident = incidentRepository.findById(incidentId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Incident not found") }
+
+        if (incident.user?.idUser != user.idUser) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own incidents")
+        }
+
+        try {
+            // Eliminar evidencias asociadas
+            evidenceRepository.deleteByIncidentId(incidentId)
+            // Eliminar registros en la tabla Report
+            reportRepository.deleteByIdIncidentId(incidentId)
+            // Eliminar el incidente
+            incidentRepository.deleteById(incidentId)
+            incidentRepository.flush()
+            entityManager.flush()
+        } catch (e: Exception) {
+            logger.error("Error deleting incident with ID: $incidentId, message: ${e.message}", e)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting incident: ${e.message}")
+        }
+    }
 }
