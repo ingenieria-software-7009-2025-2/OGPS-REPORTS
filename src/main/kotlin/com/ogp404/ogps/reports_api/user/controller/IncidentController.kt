@@ -188,4 +188,69 @@ class IncidentController(
                 .body(mapOf("error" to "Error retrieving incidents: ${ex.message}"))
         }
     }
+
+    @GetMapping("/nearby")
+    fun getNearbyIncidents(
+        @RequestHeader("Authorization") authHeader: String,
+        @RequestParam latitude: Double,
+        @RequestParam longitude: Double,
+        @RequestParam(defaultValue = "5.0") radius: Double
+    ): ResponseEntity<Any> {
+        return try {
+            // Validamos el token
+            val token = authHeader.removePrefix("Bearer ").trim()
+            if (token.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+            }
+
+            // Validamos los parámetros
+            if (latitude < -90.0 || latitude > 90.0) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid latitude. Must be between -90 and 90")
+            }
+            if (longitude < -180.0 || longitude > 180.0) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid longitude. Must be between -180 and 180")
+            }
+            if (radius <= 0.0) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Radius must be greater than 0")
+            }
+
+            logger.info("Getting nearby incidents at coordinates ($latitude, $longitude) with radius $radius km")
+            val nearbyIncidents = incidentService.getNearbyIncidents(token, latitude, longitude, radius)
+
+            if (nearbyIncidents.isEmpty()) {
+                logger.info("No incidents found near coordinates ($latitude, $longitude) within $radius km")
+            } else {
+                logger.info("Found ${nearbyIncidents.size} incidents near coordinates ($latitude, $longitude) within $radius km")
+            }
+
+            ResponseEntity.ok(nearbyIncidents)
+        } catch (ex: ResponseStatusException) {
+            logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            logger.error("Error retrieving nearby incidents: ${ex.message}", ex)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Error retrieving nearby incidents: ${ex.message}"))
+        }
+    }
+
+    @GetMapping("/all")
+    fun getAllIncidents(
+        @RequestHeader("Authorization") authHeader: String
+    ): ResponseEntity<Any> {
+        return try {
+            val token = authHeader.removePrefix("Bearer ").trim()
+            if (token.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+            }
+
+            val incidents = incidentService.getAllIncidents(token)
+            ResponseEntity.ok(incidents)
+        } catch (ex: ResponseStatusException) {
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Error retrieving all incidents: ${ex.message}"))
+        }
+    }
 }
