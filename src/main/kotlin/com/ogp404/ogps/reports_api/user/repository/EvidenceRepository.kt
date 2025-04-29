@@ -8,7 +8,8 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface EvidenceRepository : JpaRepository<Evidence, Int> {
+interface EvidenceRepository : JpaRepository<Evidence, Long> {
+    fun findAllByIncidentId(incidentId: Int): List<Evidence>
     fun deleteByIncidentId(incidentId: Int)
     fun findByIncidentId(incidentId: Int): List<Evidence>
 }

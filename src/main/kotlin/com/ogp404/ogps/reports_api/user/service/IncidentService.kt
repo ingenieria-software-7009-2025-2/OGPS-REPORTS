@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.server.ResponseStatusException
 import java.sql.Timestamp
+import kotlin.math.*
 
 @Service
 class IncidentService(
@@ -201,4 +202,86 @@ class IncidentService(
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error deleting incident: ${e.message}")
         }
     }
+    fun getNearbyIncidents(token: String, latitude: Double, longitude: Double, radius: Double): List<Map<String, Any?>> {
+        // Validamos el token
+        val person = personRepository.findByToken(token)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+
+        // Obtener todos los incidentes
+        val allIncidents = incidentRepository.findAll()
+
+        // Filtrar por distancia
+        val nearbyIncidents = allIncidents.filter { incident ->
+            val distance = calculateDistance(
+                latitude, longitude,
+                incident.latitude, incident.longitude
+            )
+            distance <= radius
+        }
+
+        // Para cada incidente, obtener sus evidencias
+        return nearbyIncidents.map { incident ->
+            val evidences = evidenceRepository.findAllByIncidentId(incident.idIncident)
+
+            mapOf(
+                "id" to incident.idIncident,
+                "userId" to incident.user?.idUser,
+                "adminId" to incident.admin?.idAdmin,
+                "latitude" to incident.latitude,
+                "longitude" to incident.longitude,
+                "category" to incident.category,
+                "title" to incident.title,
+                "description" to incident.description,
+                "status" to incident.status,
+                "reportDate" to incident.reportDate,
+                "distance" to calculateDistance(latitude, longitude, incident.latitude, incident.longitude),
+                "photos" to evidences.map { evidence -> mapOf("id" to evidence.id, "url" to evidence.photoUrl) }
+            )
+        }.sortedBy { it["distance"] as Double }
+    }
+
+    fun getAllIncidents(token: String): List<Map<String, Any?>> {
+        // Validamos el token
+        val person = personRepository.findByToken(token)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+
+        // Obtener todos los incidentes
+        val allIncidents = incidentRepository.findAll()
+
+        // Para cada incidente, obtener sus evidencias
+        return allIncidents.map { incident ->
+            val evidences = evidenceRepository.findAllByIncidentId(incident.idIncident)
+
+            mapOf(
+                "id" to incident.idIncident,
+                "userId" to incident.user?.idUser,
+                "adminId" to incident.admin?.idAdmin,
+                "latitude" to incident.latitude,
+                "longitude" to incident.longitude,
+                "category" to incident.category,
+                "title" to incident.title,
+                "description" to incident.description,
+                "status" to incident.status,
+                "reportDate" to incident.reportDate,
+                "photos" to evidences.map { evidence -> mapOf("id" to evidence.id, "url" to evidence.photoUrl) }
+            )
+        }
+    }
+
+    // Función auxiliar para calcular la distancia entre dos coordenadas utilizando la fórmula de Haversine
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadius = 6371.0 // Radio de la Tierra en kilómetros
+
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+
+        val a = sin(dLat / 2) * sin(dLat / 2) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(dLon / 2) * sin(dLon / 2)
+
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return earthRadius * c
+    }
 }
+
