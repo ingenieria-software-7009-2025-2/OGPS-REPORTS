@@ -14,4 +14,5 @@ interface PersonRepository : CrudRepository<Person, Int> {
     fun findByToken(token: String): Person?
 
     fun findByUserName(userName: String): Person?
+
 }
