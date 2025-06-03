@@ -278,4 +278,36 @@ class IncidentController(
                 .body(mapOf("error" to "Error retrieving all incidents: ${ex.message}"))
         }
     }
+
+    @GetMapping("/filter")
+    fun filterIncidentsByCategories(
+        @RequestParam("categories") categories: List<String>?
+    ): ResponseEntity<Any> {
+        return try {
+            val filteredIncidents = incidentService.getIncidentsByCategories(categories)
+            ResponseEntity.ok(filteredIncidents)
+        } catch (ex: ResponseStatusException) {
+            logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            logger.error("Unexpected error: ${ex.message}", ex)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Unexpected error: ${ex.message}"))
+        }
+    }
+
+    @GetMapping("/categories")
+    fun getAvailableCategories(): ResponseEntity<Any> {
+        return try {
+            val categories = incidentService.getAvailableCategories()
+            ResponseEntity.ok(categories)
+        } catch (ex: ResponseStatusException) {
+            logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            logger.error("Unexpected error: ${ex.message}", ex)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Unexpected error: ${ex.message}"))
+        }
+    }
 }

@@ -283,5 +283,89 @@ class IncidentService(
 
         return earthRadius * c
     }
+
+    fun getIncidentsByCategories(categories: List<String>?): List<Map<String, Any?>> {
+        try {
+            // Si no se proporcionan categorías, devolver todos los incidentes
+            if (categories.isNullOrEmpty()) {
+                logger.info("No categories provided, fetching all incidents")
+                return getAllIncidentsWithoutAuth()
+            }
+
+            // Validar que las categorías sean válidas
+            val invalidCategories = categories.filter { it !in validCategories }
+            if (invalidCategories.isNotEmpty()) {
+                logger.warn("Invalid categories provided: $invalidCategories")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid categories: $invalidCategories")
+            }
+
+            // Buscar incidentes que coincidan con las categorías
+            val incidents = incidentRepository.findByCategoryIn(categories)
+            if (incidents.isEmpty()) {
+                logger.info("No incidents found for categories: $categories")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No incidents found for the selected categories")
+            }
+
+            // Mapear los incidentes a un formato compatible con el frontend
+            return incidents.map { incident ->
+                val evidences = evidenceRepository.findAllByIncidentId(incident.idIncident)
+                mapOf(
+                    "id" to incident.idIncident,
+                    "userId" to incident.user?.idUser,
+                    "adminId" to incident.admin?.idAdmin,
+                    "latitude" to incident.latitude,
+                    "longitude" to incident.longitude,
+                    "category" to incident.category,
+                    "title" to incident.title,
+                    "description" to incident.description,
+                    "status" to incident.status,
+                    "reportDate" to incident.reportDate,
+                    "photos" to evidences.map { evidence -> mapOf("id" to evidence.id, "url" to evidence.photoUrl) }
+                )
+            }
+        } catch (ex: ResponseStatusException) {
+            throw ex // Propagar excepciones específicas como 404
+        } catch (ex: Exception) {
+            logger.error("Error fetching incidents by categories: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error fetching incidents: ${ex.message}")
+        }
+    }
+
+    // Método auxiliar para obtener todos los incidentes sin autenticación
+    private fun getAllIncidentsWithoutAuth(): List<Map<String, Any?>> {
+        try {
+            val allIncidents = incidentRepository.findAll()
+            return allIncidents.map { incident ->
+                val evidences = evidenceRepository.findAllByIncidentId(incident.idIncident)
+                mapOf(
+                    "id" to incident.idIncident,
+                    "userId" to incident.user?.idUser,
+                    "adminId" to incident.admin?.idAdmin,
+                    "latitude" to incident.latitude,
+                    "longitude" to incident.longitude,
+                    "category" to incident.category,
+                    "title" to incident.title,
+                    "description" to incident.description,
+                    "status" to incident.status,
+                    "reportDate" to incident.reportDate,
+                    "photos" to evidences.map { evidence -> mapOf("id" to evidence.id, "url" to evidence.photoUrl) }
+                )
+            }
+        } catch (ex: Exception) {
+            logger.error("Error fetching all incidents: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error fetching all incidents: ${ex.message}")
+        }
+    }
+
+    // Método para obtener las categorías disponibles
+    fun getAvailableCategories(): List<String> {
+        try {
+            val categoriesInUse = incidentRepository.findAll().map { it.category }.distinct()
+            return validCategories.filter { it in categoriesInUse }
+        } catch (ex: Exception) {
+            logger.error("Error fetching available categories: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error fetching available categories: ${ex.message}")
+        }
+    }
 }
 
