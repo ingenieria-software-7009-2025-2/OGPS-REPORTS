@@ -357,7 +357,6 @@ class IncidentService(
         }
     }
 
-    // Método para obtener las categorías disponibles
     fun getAvailableCategories(): List<String> {
         try {
             val categoriesInUse = incidentRepository.findAll().map { it.category }.distinct()
