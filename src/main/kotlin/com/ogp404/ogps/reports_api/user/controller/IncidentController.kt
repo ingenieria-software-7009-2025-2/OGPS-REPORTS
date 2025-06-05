@@ -6,7 +6,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.ogp404.ogps.reports_api.incident.controller.body.IncidentBody
 import com.ogp404.ogps.reports_api.incident.service.IncidentService
+import com.ogp404.ogps.reports_api.user.controller.body.VerificationBody
 import com.ogp404.ogps.reports_api.user.repository.entity.Incident
+import com.ogp404.ogps.reports_api.user.service.VerificationService
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -21,9 +23,20 @@ import java.util.UUID
 @RestController
 @RequestMapping("/v1/incidents")
 class IncidentController(
-    private val incidentService: IncidentService
+    private val incidentService: IncidentService,
+    private val verificationService: VerificationService
 ) {
     private val logger = LoggerFactory.getLogger(IncidentController::class.java)
+
+    @PostMapping("/{id}/verify")
+    fun verifyIncident(
+        @PathVariable id: Int,
+        @RequestBody body: VerificationBody
+    ): ResponseEntity<String> {
+        val result = verificationService.verifyIncident(id, body.idUser)
+        return ResponseEntity.ok(result)
+    }
+
 
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun reportIncident(
@@ -311,3 +324,4 @@ class IncidentController(
         }
     }
 }
+

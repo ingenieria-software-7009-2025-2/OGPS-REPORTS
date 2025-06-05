@@ -64,3 +64,13 @@ CREATE TABLE reports (
     id_user INT NOT NULL REFERENCES users(id_user) ON DELETE CASCADE,
   	id_incident INT NOT NULL REFERENCES incident(id_incident) ON DELETE cascade
 );
+
+DROP TABLE IF EXISTS validation_request;
+
+
+CREATE TABLE verification (
+    id_request SERIAL PRIMARY KEY,
+    id_user INT NOT NULL REFERENCES users(id_user) ON DELETE CASCADE,
+    id_incident INT NOT NULL REFERENCES incident(id_incident) ON DELETE CASCADE,
+    CONSTRAINT unique_verification UNIQUE (id_user, id_incident)
+);
