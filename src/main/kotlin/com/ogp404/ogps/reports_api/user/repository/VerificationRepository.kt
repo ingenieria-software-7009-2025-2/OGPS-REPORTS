@@ -2,6 +2,7 @@ package com.ogp404.ogps.reports_api.user.repository
 
 
 import com.ogp404.ogps.reports_api.user.domain.Verificacion
+import com.ogp404.ogps.reports_api.user.repository.entity.Verification
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
