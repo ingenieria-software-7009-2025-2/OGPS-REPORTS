@@ -37,8 +37,12 @@ class VerificationService(
 
 
         val count = verificationRepository.countByIdIncident(idIncident)
+
         if (count >= 3 && incident.status != "Resolved") {
             incident.status = "Resolved"
+            incidentRepository.save(incident)
+        } else if (count in 1..2 && incident.status != "Resolved") {
+            incident.status = "In Process"
             incidentRepository.save(incident)
         }
 
