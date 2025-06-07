@@ -317,35 +317,87 @@ class IncidentController(
         }
     }
 
-    @GetMapping("/filter")
-    fun filterIncidentsByCategories(
-        @RequestParam("categories") categories: List<String>?
+    @PutMapping("/{id}/status", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun updateIncidentStatus(
+        @RequestHeader("Authorization") authHeader: String,
+        @PathVariable("id") incidentId: Int,
+        @RequestParam("status") status: String,
+        @RequestParam("description", required = false) description: String?,
+        @RequestParam("photos", required = false) photos: Array<MultipartFile>?
     ): ResponseEntity<Any> {
         return try {
-            val filteredIncidents = incidentService.getIncidentsByCategories(categories)
-            ResponseEntity.ok(filteredIncidents)
-        } catch (ex: ResponseStatusException) {
-            logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
-            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
-        } catch (ex: Exception) {
-            logger.error("Unexpected error: ${ex.message}", ex)
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(mapOf("error" to "Unexpected error: ${ex.message}"))
-        }
-    }
+            // Validamos el token
+            val token = authHeader.removePrefix("Bearer ").trim()
+            if (token.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+            }
+            logger.info("Token received for status update: $token")
+            logger.info("Updating incident $incidentId with status: $status, description: $description")
 
-    @GetMapping("/categories")
-    fun getAvailableCategories(): ResponseEntity<Any> {
-        return try {
-            val categories = incidentService.getAvailableCategories()
-            ResponseEntity.ok(categories)
+            // Validamos que el status no esté vacío
+            if (status.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Status is required")
+            }
+
+            // Validamos y procesamos las fotos si existen
+            var photoUrls: List<String> = emptyList()
+            if (photos != null && photos.isNotEmpty()) {
+                // Validamos tipo y tamaño de las fotos
+                val allowedTypes = setOf("image/jpeg", "image/png", "image/jpg")
+                val maxSize = 5 * 1024 * 1024 // 5 MB
+                
+                photos.forEach { photo ->
+                    logger.info("Processing photo for status update: ${photo.originalFilename}, size: ${photo.size}, type: ${photo.contentType}")
+                    if (!allowedTypes.contains(photo.contentType)) {
+                        throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid file type: ${photo.contentType}")
+                    }
+                    if (photo.size > maxSize) {
+                        throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File too large: ${photo.originalFilename}")
+                    }
+                    if (photo.originalFilename.isNullOrBlank()) {
+                        throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "File name cannot be empty")
+                    }
+                }
+
+                // Guardamos las fotos y generamos los URLs
+                val uploadDir = Paths.get("uploads")
+                if (!Files.exists(uploadDir)) {
+                    try {
+                        Files.createDirectories(uploadDir)
+                        logger.info("Created upload directory: $uploadDir")
+                    } catch (e: Exception) {
+                        logger.error("Failed to create upload directory: ${e.message}", e)
+                        throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create upload directory")
+                    }
+                }
+
+                photoUrls = photos.map { photo ->
+                    try {
+                        val fileName = "${UUID.randomUUID()}_${photo.originalFilename}"
+                        val filePath = uploadDir.resolve(fileName)
+                        Files.copy(photo.inputStream, filePath)
+                        logger.info("Saved status update photo to: $filePath")
+                        "http://localhost:8080/uploads/$fileName"
+                    } catch (e: Exception) {
+                        logger.error("Failed to save photo ${photo.originalFilename}: ${e.message}", e)
+                        throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to save photo: ${e.message}")
+                    }
+                }
+                logger.info("Generated photo URLs for status update: $photoUrls")
+            }
+
+            // Llamamos al servicio para actualizar el incidente
+            val updatedIncident = incidentService.updateIncidentStatus(token, incidentId, status, description, photoUrls)
+            logger.info("Incident status updated successfully: $updatedIncident")
+
+            ResponseEntity.ok(updatedIncident)
         } catch (ex: ResponseStatusException) {
             logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
             ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
         } catch (ex: Exception) {
-            logger.error("Unexpected error: ${ex.message}", ex)
+            logger.error("Error updating incident status: ${ex.message}", ex)
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(mapOf("error" to "Unexpected error: ${ex.message}"))
+                .body(mapOf("error" to "Error updating incident status: ${ex.message}"))
         }
     }
 }
