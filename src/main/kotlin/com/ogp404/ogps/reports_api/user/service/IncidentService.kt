@@ -392,7 +392,7 @@ class IncidentService(
         //}
 
         // Validamos que el status sea válido para usuarios
-        val validUserStatuses = listOf("Reported", "In Progress", "Resolved", "Approved", "Rejected")
+        val validUserStatuses = listOf("Reported", "In Process", "Resolved", "Approved", "Rejected")
         if (status !in validUserStatuses) {
             throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid status. Valid statuses for users are: ${validUserStatuses.joinToString(", ")}")
         }
