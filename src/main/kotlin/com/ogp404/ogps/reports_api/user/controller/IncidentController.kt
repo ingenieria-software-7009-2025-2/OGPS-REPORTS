@@ -37,6 +37,31 @@ class IncidentController(
         return ResponseEntity.ok(result)
     }
 
+    @GetMapping("/{id}/verification-count")
+    fun getVerificationCount(
+        @RequestHeader("Authorization") authHeader: String,
+        @PathVariable id: Int
+    ): ResponseEntity<Any> {
+        return try {
+            val token = authHeader.removePrefix("Bearer ").trim()
+            if (token.isBlank()) {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+            }
+
+            logger.info("Getting verification count for incident: $id")
+            val count = verificationService.getVerificationCount(id)
+            logger.info("Verification count for incident $id: $count")
+
+            ResponseEntity.ok(count)
+        } catch (ex: ResponseStatusException) {
+            logger.error("ResponseStatusException: ${ex.statusCode} - ${ex.reason}", ex)
+            ResponseEntity.status(ex.statusCode).body(mapOf("error" to ex.reason))
+        } catch (ex: Exception) {
+            logger.error("Error getting verification count: ${ex.message}", ex)
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(mapOf("error" to "Error getting verification count: ${ex.message}"))
+        }
+    }
 
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun reportIncident(

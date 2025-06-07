@@ -4,7 +4,6 @@ import com.ogp404.ogps.reports_api.incident.repository.IncidentRepository
 import com.ogp404.ogps.reports_api.user.domain.Verificacion
 import com.ogp404.ogps.reports_api.user.repository.VerificationRepository
 import com.ogp404.ogps.reports_api.user.repository.UserRepository
-import com.ogp404.ogps.reports_api.user.repository.entity.Verification
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -35,7 +34,6 @@ class VerificationService(
         val verification = Verificacion(idUser = idUser, idIncident = idIncident)
         verificationRepository.save(verification)
 
-
         val count = verificationRepository.countByIdIncident(idIncident)
 
         if (count >= 3 && incident.status != "Resolved") {
@@ -47,5 +45,14 @@ class VerificationService(
         }
 
         return "Verificación registrada exitosamente"
+    }
+
+    @Transactional
+    fun getVerificationCount(incidentId: Int): Int {
+        return try {
+            verificationRepository.countByIdIncident(incidentId)
+        } catch (ex: Exception) {
+            0 // Retorna 0 si hay error
+        }
     }
 }
