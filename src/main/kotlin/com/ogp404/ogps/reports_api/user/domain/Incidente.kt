@@ -33,7 +33,7 @@ data class Incidente(
     val description: String?,
 
     @Column(name = "status", nullable = false)
-    val status: String,
+    var status: String,
 
     @Column(name = "report_date", nullable = false)
     val reportDate: LocalDate

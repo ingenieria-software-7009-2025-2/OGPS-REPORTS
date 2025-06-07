@@ -283,5 +283,179 @@ class IncidentService(
 
         return earthRadius * c
     }
+
+    fun getIncidentsByCategories(categories: List<String>?): List<Map<String, Any?>> {
+        try {
+            // Si no se proporcionan categorías, devolver todos los incidentes
+            if (categories.isNullOrEmpty()) {
+                logger.info("No categories provided, fetching all incidents")
+                return getAllIncidentsWithoutAuth()
+            }
+
+            // Validar que las categorías sean válidas
+            val invalidCategories = categories.filter { it !in validCategories }
+            if (invalidCategories.isNotEmpty()) {
+                logger.warn("Invalid categories provided: $invalidCategories")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid categories: $invalidCategories")
+            }
+
+            // Buscar incidentes que coincidan con las categorías
+            val incidents = incidentRepository.findByCategoryIn(categories)
+            if (incidents.isEmpty()) {
+                logger.info("No incidents found for categories: $categories")
+                throw ResponseStatusException(HttpStatus.NOT_FOUND, "No incidents found for the selected categories")
+            }
+
+            // Mapear los incidentes a un formato compatible con el frontend
+            return incidents.map { incident ->
+                val evidences = evidenceRepository.findAllByIncidentId(incident.idIncident)
+                mapOf(
+                    "id" to incident.idIncident,
+                    "userId" to incident.user?.idUser,
+                    "adminId" to incident.admin?.idAdmin,
+                    "latitude" to incident.latitude,
+                    "longitude" to incident.longitude,
+                    "category" to incident.category,
+                    "title" to incident.title,
+                    "description" to incident.description,
+                    "status" to incident.status,
+                    "reportDate" to incident.reportDate,
+                    "photos" to evidences.map { evidence -> mapOf("id" to evidence.id, "url" to evidence.photoUrl) }
+                )
+            }
+        } catch (ex: ResponseStatusException) {
+            throw ex // Propagar excepciones específicas como 404
+        } catch (ex: Exception) {
+            logger.error("Error fetching incidents by categories: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error fetching incidents: ${ex.message}")
+        }
+    }
+
+    // Método auxiliar para obtener todos los incidentes sin autenticación
+    private fun getAllIncidentsWithoutAuth(): List<Map<String, Any?>> {
+        try {
+            val allIncidents = incidentRepository.findAll()
+            return allIncidents.map { incident ->
+                val evidences = evidenceRepository.findAllByIncidentId(incident.idIncident)
+                mapOf(
+                    "id" to incident.idIncident,
+                    "userId" to incident.user?.idUser,
+                    "adminId" to incident.admin?.idAdmin,
+                    "latitude" to incident.latitude,
+                    "longitude" to incident.longitude,
+                    "category" to incident.category,
+                    "title" to incident.title,
+                    "description" to incident.description,
+                    "status" to incident.status,
+                    "reportDate" to incident.reportDate,
+                    "photos" to evidences.map { evidence -> mapOf("id" to evidence.id, "url" to evidence.photoUrl) }
+                )
+            }
+        } catch (ex: Exception) {
+            logger.error("Error fetching all incidents: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error fetching all incidents: ${ex.message}")
+        }
+    }
+
+    fun getAvailableCategories(): List<String> {
+        try {
+            val categoriesInUse = incidentRepository.findAll().map { it.category }.distinct()
+            return validCategories.filter { it in categoriesInUse }
+        } catch (ex: Exception) {
+            logger.error("Error fetching available categories: ${ex.message}", ex)
+            throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Error fetching available categories: ${ex.message}")
+        }
+    }
+
+    @Transactional
+    fun updateIncidentStatus(token: String, incidentId: Int, status: String, description: String?, photoUrls: List<String>): Incident {
+        // Validamos el token y obtenemos la persona asociada
+        val person: Person = personRepository.findByToken(token)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token")
+
+        // Solo los usuarios pueden actualizar el estado de sus incidentes
+        if (person.role != "User") {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Only users can update incident status")
+        }
+
+        // Obtenemos el usuario asociado a la persona
+        val user: User = userRepository.findByPersonId(person.id)
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "User not found for person with id: ${person.id}")
+
+        // Verificamos que el incidente existe
+        val incident = incidentRepository.findById(incidentId)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Incident with id $incidentId not found") }
+
+        // Verificamos que el usuario sea el propietario del incidente
+        //if (incident.user?.idUser != user.idUser) {
+        //    throw ResponseStatusException(HttpStatus.FORBIDDEN, "You can only update your own incidents")
+        //}
+
+        // Validamos que el status sea válido para usuarios
+        val validUserStatuses = listOf("Reported", "In Process", "Resolved", "Approved", "Rejected")
+        if (status !in validUserStatuses) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Invalid status. Valid statuses for users are: ${validUserStatuses.joinToString(", ")}")
+        }
+
+        // Validamos la descripción si se proporciona
+        if (description != null && description.length > 1000) {
+            throw ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Description cannot exceed 1000 characters")
+        }
+
+        try {
+            // Creamos un nuevo incidente con los valores actualizados
+            val updatedDescription = if (description != null) {
+                if (incident.description.isNullOrBlank()) {
+                    description
+                } else {
+                    "${incident.description}\n\n[Status Update]: $description"
+                }
+            } else {
+                incident.description
+            }
+
+            // Creamos una nueva instancia con los valores actualizados
+            val updatedIncident = Incident(
+                idIncident = incident.idIncident,
+                user = incident.user,
+                admin = incident.admin,
+                latitude = incident.latitude,
+                longitude = incident.longitude,
+                category = incident.category,
+                title = incident.title,
+                description = updatedDescription,
+                status = status,
+                reportDate = incident.reportDate
+            )
+
+            // Guardamos el incidente actualizado
+            val savedIncident = incidentRepository.save(updatedIncident).also {
+                incidentRepository.flush()
+                entityManager.flush()
+            }
+
+            // Si hay nuevas fotos, las guardamos como evidencias adicionales
+            if (photoUrls.isNotEmpty()) {
+                photoUrls.forEach { photoUrl ->
+                    val evidence = Evidence(
+                        incidentId = savedIncident.idIncident,
+                        photoUrl = photoUrl
+                    )
+                    evidenceRepository.save(evidence).also {
+                        evidenceRepository.flush()
+                        entityManager.flush()
+                    }
+                }
+                logger.info("Added ${photoUrls.size} new evidence photos for incident $incidentId")
+            }
+
+            logger.info("Successfully updated incident $incidentId to status '$status' by user ${user.idUser}")
+            return savedIncident
+
+        } catch (e: Exception) {
+            logger.error("Error updating incident $incidentId: ${e.message}", e)
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating incident: ${e.message}")
+        }
+    }
 }
 

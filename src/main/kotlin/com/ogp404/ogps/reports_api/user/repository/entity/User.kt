@@ -103,3 +103,24 @@ class Incident(
     @OneToMany(mappedBy = "incidentId", cascade = [CascadeType.ALL], orphanRemoval = true)
     var evidences: MutableList<Evidence> = mutableListOf()
 )
+
+@Entity
+@Table(
+    name = "verification",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["id_user", "id_incident"])]
+)
+class Verification(
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_request")
+    val id: Int = 0,
+
+    @ManyToOne
+    @JoinColumn(name = "id_user", referencedColumnName = "id_user", nullable = false)
+    val user: User,
+
+    @ManyToOne
+    @JoinColumn(name = "id_incident", referencedColumnName = "id_incident", nullable = false)
+    val incident: Incident
+)
